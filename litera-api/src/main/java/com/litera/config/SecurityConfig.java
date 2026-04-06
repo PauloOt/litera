@@ -30,6 +30,8 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/cadastro", "/auth/login").permitAll()
+                        .requestMatchers("/planos").permitAll()
+                        .requestMatchers("/pagamentos/webhook").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface AssinaturaUsuarioRepository extends JpaRepository<AssinaturaUsuario, Long> {
 
     Optional<AssinaturaUsuario> findByUsuarioIdAndStatusAssinatura(Long usuarioId, String statusAssinatura);
+
+    Optional<AssinaturaUsuario> findByStripeId(String stripeId);
 }
