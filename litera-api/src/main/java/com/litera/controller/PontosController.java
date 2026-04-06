@@ -1,20 +1,19 @@
 package com.litera.controller;
 
-import com.litera.dto.DesafioProgressoDTO;
-import com.litera.dto.HistoricoPontosDTO;
-import com.litera.dto.PontosResponseDTO;
-import com.litera.dto.RankingItemDTO;
+import com.litera.dto.*;
 import com.litera.model.CarteiraPontos;
 import com.litera.model.HistoricoPontos;
-import com.litera.model.Usuario;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.DesafioService;
 import com.litera.service.PontosService;
+import com.litera.service.ResgateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,6 +26,7 @@ public class PontosController {
 
     private final PontosService pontosService;
     private final DesafioService desafioService;
+    private final ResgateService resgateService;
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping("/pontos")
@@ -72,6 +72,13 @@ public class PontosController {
     public ResponseEntity<List<DesafioProgressoDTO>> getDesafios(@AuthenticationPrincipal UserDetails userDetails) {
         Long usuarioId = getUsuarioId(userDetails);
         return ResponseEntity.ok(desafioService.getDesafiosComProgresso(usuarioId));
+    }
+
+    @PostMapping("/pontos/resgatar/evento")
+    public ResponseEntity<ResgateResponseDTO> resgatar(@AuthenticationPrincipal UserDetails userDetails,
+                                                        @RequestBody ResgateRequestDTO dto) {
+        Long usuarioId = getUsuarioId(userDetails);
+        return ResponseEntity.ok(resgateService.resgatar(usuarioId, dto.getPercentualDesconto()));
     }
 
     private Long getUsuarioId(UserDetails userDetails) {
