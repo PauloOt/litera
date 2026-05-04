@@ -23,13 +23,21 @@ function DecoSVG() {
 /* ─── Campo de formulário ────────────────────────────────────────────── */
 function Campo({ label, id, error, children }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="font-body text-sm font-medium text-bark">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label
+        htmlFor={id}
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--color-bark)',
+        }}
+      >
         {label}
       </label>
       {children}
       {error && (
-        <p className="font-body text-xs text-red-500">{error}</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#EF4444' }}>{error}</p>
       )}
     </div>
   );
@@ -42,16 +50,16 @@ export default function Login() {
 
   const successMsg = location.state?.success ?? null;
 
-  const [form, setForm] = useState({ email: '', senha: '' });
-  const [errors, setErrors] = useState({});
-  const [globalError, setGlobalError] = useState('');
+  const [form, setForm]           = useState({ email: '', senha: '' });
+  const [errors, setErrors]       = useState({});
+  const [globalError, setGlobal]  = useState('');
   const [showSenha, setShowSenha] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]     = useState(false);
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
     setErrors(err => ({ ...err, [e.target.name]: '' }));
-    setGlobalError('');
+    setGlobal('');
   }
 
   function validate() {
@@ -77,61 +85,153 @@ export default function Login() {
       navigate('/dashboard', { replace: true });
     } catch (err) {
       if (err.response?.status === 401) {
-        setGlobalError('E-mail ou senha incorretos');
+        setGlobal('E-mail ou senha incorretos');
       } else {
-        setGlobalError('Erro ao conectar com o servidor. Tente novamente.');
+        setGlobal('Erro ao conectar com o servidor. Tente novamente.');
       }
     } finally {
       setLoading(false);
     }
   }
 
+  /* ── Estilos reutilizáveis ─────────────────────────────────────────── */
+  const inputBase = {
+    width: '100%',
+    border: '1px solid var(--color-sand)',
+    borderRadius: 12,
+    padding: '12px 16px',
+    fontFamily: 'var(--font-body)',
+    fontSize: 14,
+    color: 'var(--color-espresso)',
+    backgroundColor: '#fff',
+    outline: 'none',
+    lineHeight: 1.5,
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+  };
+  const inputError = { ...inputBase, borderColor: '#EF4444' };
+  const inputFocus = {
+    borderColor: 'var(--color-teal)',
+    boxShadow: '0 0 0 3px rgba(2,73,89,0.15)',
+  };
+
   return (
-    <div className="flex min-h-screen">
-      {/* ── Metade esquerda (decorativa) ── */}
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+
+      {/* ── Painel esquerdo (decorativo) ── */}
       <div
-        className="hidden md:flex flex-col items-center justify-center gap-8 px-10"
-        style={{ width: '45%', background: '#011826' }}
+        className="hidden md:flex"
+        style={{
+          width: '45%',
+          flexShrink: 0,
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 32,
+          padding: '40px',
+          background: 'var(--color-ink)',
+        }}
       >
-        <div className="text-center">
-          <p className="font-display text-5xl font-bold text-cream tracking-wide select-none">Litera</p>
-          <p className="font-body text-sm font-light mt-2" style={{ color: '#8C5A3C' }}>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 48,
+            fontWeight: 700,
+            color: 'var(--color-cream)',
+            letterSpacing: '0.05em',
+            userSelect: 'none',
+          }}>
+            Litera
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            fontWeight: 300,
+            color: 'var(--color-walnut)',
+            marginTop: 8,
+          }}>
             Sua jornada literária começa aqui
           </p>
         </div>
+
         <DecoSVG />
-        <div className="flex items-center gap-2" style={{ color: '#024959' }}>
-          <BookOpen size={18} />
-          <span className="font-body text-xs" style={{ color: '#8C5A3C' }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <BookOpen size={16} style={{ color: 'var(--color-teal)' }} />
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 12,
+            color: 'var(--color-walnut)',
+          }}>
             Gerencie leituras, eventos e pontos em um só lugar
           </span>
         </div>
       </div>
 
-      {/* ── Metade direita (formulário) ── */}
-      <div className="flex flex-1 items-center justify-center bg-cream px-6 py-12">
-        <div className="w-full max-w-md">
+      {/* ── Painel direito (formulário) ── */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--color-cream)',
+        padding: '48px 24px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
 
-          {/* Mensagem de sucesso do cadastro */}
+          {/* Mensagem de sucesso vinda do cadastro */}
           {successMsg && (
-            <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-              <p className="font-body text-sm text-green-700">{successMsg}</p>
+            <div style={{
+              marginBottom: 24,
+              padding: '12px 16px',
+              borderRadius: 12,
+              border: '1px solid #bbf7d0',
+              backgroundColor: '#f0fdf4',
+            }}>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#15803d' }}>
+                {successMsg}
+              </p>
             </div>
           )}
 
-          <h1 className="font-display text-3xl font-semibold text-espresso mb-1">
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 30,
+            fontWeight: 600,
+            color: 'var(--color-espresso)',
+            marginBottom: 4,
+          }}>
             Bem-vindo de volta
           </h1>
-          <p className="font-body text-sm text-walnut mb-8">Entre na sua conta</p>
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 14,
+            color: 'var(--color-walnut)',
+            marginBottom: 32,
+          }}>
+            Entre na sua conta
+          </p>
 
           {/* Erro global */}
           {globalError && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-              <p className="font-body text-sm text-red-600">{globalError}</p>
+            <div style={{
+              marginBottom: 20,
+              padding: '12px 16px',
+              borderRadius: 12,
+              border: '1px solid #fecaca',
+              backgroundColor: '#fef2f2',
+            }}>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#dc2626' }}>
+                {globalError}
+              </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+          >
+            {/* E-mail */}
             <Campo label="E-mail" id="email" error={errors.email}>
               <input
                 id="email"
@@ -141,14 +241,18 @@ export default function Login() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="seu@email.com"
-                className={`rounded-xl border px-4 py-3 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                  errors.email ? 'border-red-400' : 'border-sand'
-                }`}
+                style={errors.email ? inputError : inputBase}
+                onFocus={e => Object.assign(e.target.style, inputFocus)}
+                onBlur={e => {
+                  e.target.style.boxShadow = '';
+                  e.target.style.borderColor = errors.email ? '#EF4444' : 'var(--color-sand)';
+                }}
               />
             </Campo>
 
+            {/* Senha */}
             <Campo label="Senha" id="senha" error={errors.senha}>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <input
                   id="senha"
                   name="senha"
@@ -157,38 +261,82 @@ export default function Login() {
                   value={form.senha}
                   onChange={handleChange}
                   placeholder="••••••••"
-                  className={`w-full rounded-xl border px-4 py-3 pr-11 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                    errors.senha ? 'border-red-400' : 'border-sand'
-                  }`}
+                  style={{ ...(errors.senha ? inputError : inputBase), paddingRight: 44 }}
+                  onFocus={e => Object.assign(e.target.style, inputFocus)}
+                  onBlur={e => {
+                    e.target.style.boxShadow = '';
+                    e.target.style.borderColor = errors.senha ? '#EF4444' : 'var(--color-sand)';
+                  }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowSenha(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-walnut hover:text-espresso transition"
                   tabIndex={-1}
                   aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-walnut)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 4,
+                  }}
                 >
                   {showSenha ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </Campo>
 
+            {/* Botão */}
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-xl py-3 font-body text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
-              style={{ background: '#024959' }}
+              style={{
+                marginTop: 8,
+                width: '100%',
+                padding: '13px 0',
+                borderRadius: 12,
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                background: 'var(--color-teal)',
+                color: '#fff',
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                fontWeight: 500,
+                letterSpacing: '0.01em',
+                opacity: loading ? 0.65 : 1,
+                transition: 'opacity 0.15s',
+              }}
             >
               {loading ? 'Entrando…' : 'Entrar'}
             </button>
           </form>
 
-          <p className="mt-6 text-center font-body text-sm text-walnut">
+          <p style={{
+            marginTop: 24,
+            textAlign: 'center',
+            fontFamily: 'var(--font-body)',
+            fontSize: 14,
+            color: 'var(--color-walnut)',
+          }}>
             Não tem conta?{' '}
-            <Link to="/cadastro" className="font-medium underline" style={{ color: '#024959' }}>
+            <Link
+              to="/cadastro"
+              style={{
+                fontWeight: 500,
+                color: 'var(--color-teal)',
+                textDecoration: 'underline',
+              }}
+            >
               Criar conta
             </Link>
           </p>
+
         </div>
       </div>
     </div>

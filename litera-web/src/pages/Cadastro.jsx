@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, BookOpen } from 'lucide-react';
 import api from '../services/api';
 
-/* ─── SVG decorativo (mesmo do Login) ───────────────────────────────── */
+/* ─── SVG decorativo ─────────────────────────────────────────────────── */
 function DecoSVG() {
   return (
     <svg viewBox="0 0 400 500" className="w-full max-w-xs opacity-20" aria-hidden="true">
@@ -22,13 +22,21 @@ function DecoSVG() {
 /* ─── Campo de formulário ────────────────────────────────────────────── */
 function Campo({ label, id, error, children }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="font-body text-sm font-medium text-bark">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label
+        htmlFor={id}
+        style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--color-bark)',
+        }}
+      >
         {label}
       </label>
       {children}
       {error && (
-        <p className="font-body text-xs text-red-500">{error}</p>
+        <p style={{ fontFamily: 'var(--font-body)', fontSize: 12, color: '#EF4444' }}>{error}</p>
       )}
     </div>
   );
@@ -73,18 +81,18 @@ export default function Cadastro() {
     senha: '',
     confirmarSenha: '',
   });
-  const [errors, setErrors] = useState({});
-  const [globalError, setGlobalError] = useState('');
-  const [showSenha, setShowSenha] = useState(false);
+  const [errors, setErrors]      = useState({});
+  const [globalError, setGlobal] = useState('');
+  const [showSenha, setShowSenha]         = useState(false);
   const [showConfirmar, setShowConfirmar] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]    = useState(false);
 
   function handleChange(e) {
     const { name, value } = e.target;
     const novo = name === 'cpf' ? mascaraCPF(value) : value;
     setForm(f => ({ ...f, [name]: novo }));
     setErrors(err => ({ ...err, [name]: '' }));
-    setGlobalError('');
+    setGlobal('');
   }
 
   function validate() {
@@ -106,11 +114,11 @@ export default function Cadastro() {
     if (!form.senha) {
       errs.senha = 'Senha obrigatória';
     } else if (form.senha.length < 8) {
-      errs.senha = 'Senha deve ter no mínimo 8 caracteres';
+      errs.senha = 'Mínimo de 8 caracteres';
     }
 
     if (!form.confirmarSenha) {
-      errs.confirmarSenha = 'Confirmação de senha obrigatória';
+      errs.confirmarSenha = 'Confirme a senha';
     } else if (form.senha !== form.confirmarSenha) {
       errs.confirmarSenha = 'As senhas não coincidem';
     }
@@ -136,57 +144,151 @@ export default function Cadastro() {
       const msg = err.response?.data?.message ?? '';
       if (err.response?.status === 409) {
         if (msg.toLowerCase().includes('cpf')) {
-          setGlobalError('Este CPF já está cadastrado');
+          setGlobal('Este CPF já está cadastrado');
         } else {
-          setGlobalError('Este e-mail já está em uso');
+          setGlobal('Este e-mail já está em uso');
         }
       } else {
-        setGlobalError('Erro ao criar conta. Tente novamente.');
+        setGlobal('Erro ao criar conta. Tente novamente.');
       }
     } finally {
       setLoading(false);
     }
   }
 
+  /* ── Estilos reutilizáveis ─────────────────────────────────────────── */
+  const inputBase = {
+    width: '100%',
+    border: '1px solid var(--color-sand)',
+    borderRadius: 12,
+    padding: '12px 16px',
+    fontFamily: 'var(--font-body)',
+    fontSize: 14,
+    color: 'var(--color-espresso)',
+    backgroundColor: '#fff',
+    outline: 'none',
+    lineHeight: 1.5,
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+  };
+  const inputError = { ...inputBase, borderColor: '#EF4444' };
+  const inputFocus = {
+    borderColor: 'var(--color-teal)',
+    boxShadow: '0 0 0 3px rgba(2,73,89,0.15)',
+  };
+
+  function makeInputHandlers(name) {
+    return {
+      onFocus: e => Object.assign(e.target.style, inputFocus),
+      onBlur:  e => {
+        e.target.style.boxShadow = '';
+        e.target.style.borderColor = errors[name] ? '#EF4444' : 'var(--color-sand)';
+      },
+    };
+  }
+
   return (
-    <div className="flex min-h-screen">
-      {/* ── Metade esquerda (decorativa) ── */}
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+
+      {/* ── Painel esquerdo (decorativo) ── */}
       <div
-        className="hidden md:flex flex-col items-center justify-center gap-8 px-10"
-        style={{ width: '45%', background: '#011826' }}
+        className="hidden md:flex"
+        style={{
+          width: '45%',
+          flexShrink: 0,
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 32,
+          padding: '40px',
+          background: 'var(--color-ink)',
+        }}
       >
-        <div className="text-center">
-          <p className="font-display text-5xl font-bold text-cream tracking-wide select-none">Litera</p>
-          <p className="font-body text-sm font-light mt-2" style={{ color: '#8C5A3C' }}>
-            Sua jornada literária começa aqui
+        <div style={{ textAlign: 'center' }}>
+          <p style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 48,
+            fontWeight: 700,
+            color: 'var(--color-cream)',
+            letterSpacing: '0.05em',
+            userSelect: 'none',
+          }}>
+            Litera
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+            fontWeight: 300,
+            color: 'var(--color-walnut)',
+            marginTop: 8,
+          }}>
+            É gratuito para sempre
           </p>
         </div>
+
         <DecoSVG />
-        <div className="flex items-center gap-2">
-          <BookOpen size={18} style={{ color: '#024959' }} />
-          <span className="font-body text-xs" style={{ color: '#8C5A3C' }}>
-            É gratuito para sempre
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <BookOpen size={16} style={{ color: 'var(--color-teal)' }} />
+          <span style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 12,
+            color: 'var(--color-walnut)',
+          }}>
+            Gerencie leituras, eventos e pontos em um só lugar
           </span>
         </div>
       </div>
 
-      {/* ── Metade direita (formulário) ── */}
-      <div className="flex flex-1 items-center justify-center bg-cream px-6 py-12">
-        <div className="w-full max-w-md">
+      {/* ── Painel direito (formulário) ── */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'var(--color-cream)',
+        padding: '48px 24px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
 
-          <h1 className="font-display text-3xl font-semibold text-espresso mb-1">
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 30,
+            fontWeight: 600,
+            color: 'var(--color-espresso)',
+            marginBottom: 4,
+          }}>
             Criar sua conta
           </h1>
-          <p className="font-body text-sm text-walnut mb-8">É gratuito para sempre</p>
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: 14,
+            color: 'var(--color-walnut)',
+            marginBottom: 32,
+          }}>
+            É gratuito para sempre
+          </p>
 
           {/* Erro global */}
           {globalError && (
-            <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-              <p className="font-body text-sm text-red-600">{globalError}</p>
+            <div style={{
+              marginBottom: 20,
+              padding: '12px 16px',
+              borderRadius: 12,
+              border: '1px solid #fecaca',
+              backgroundColor: '#fef2f2',
+            }}>
+              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#dc2626' }}>
+                {globalError}
+              </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+          >
+            {/* Nome */}
             <Campo label="Nome completo" id="nomeCompleto" error={errors.nomeCompleto}>
               <input
                 id="nomeCompleto"
@@ -196,12 +298,12 @@ export default function Cadastro() {
                 value={form.nomeCompleto}
                 onChange={handleChange}
                 placeholder="Seu nome completo"
-                className={`rounded-xl border px-4 py-3 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                  errors.nomeCompleto ? 'border-red-400' : 'border-sand'
-                }`}
+                style={errors.nomeCompleto ? inputError : inputBase}
+                {...makeInputHandlers('nomeCompleto')}
               />
             </Campo>
 
+            {/* CPF */}
             <Campo label="CPF" id="cpf" error={errors.cpf}>
               <input
                 id="cpf"
@@ -213,12 +315,12 @@ export default function Cadastro() {
                 onChange={handleChange}
                 placeholder="000.000.000-00"
                 maxLength={14}
-                className={`rounded-xl border px-4 py-3 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                  errors.cpf ? 'border-red-400' : 'border-sand'
-                }`}
+                style={errors.cpf ? inputError : inputBase}
+                {...makeInputHandlers('cpf')}
               />
             </Campo>
 
+            {/* E-mail */}
             <Campo label="E-mail" id="email" error={errors.email}>
               <input
                 id="email"
@@ -228,14 +330,14 @@ export default function Cadastro() {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="seu@email.com"
-                className={`rounded-xl border px-4 py-3 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                  errors.email ? 'border-red-400' : 'border-sand'
-                }`}
+                style={errors.email ? inputError : inputBase}
+                {...makeInputHandlers('email')}
               />
             </Campo>
 
+            {/* Senha */}
             <Campo label="Senha" id="senha" error={errors.senha}>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <input
                   id="senha"
                   name="senha"
@@ -244,24 +346,36 @@ export default function Cadastro() {
                   value={form.senha}
                   onChange={handleChange}
                   placeholder="Mínimo 8 caracteres"
-                  className={`w-full rounded-xl border px-4 py-3 pr-11 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                    errors.senha ? 'border-red-400' : 'border-sand'
-                  }`}
+                  style={{ ...(errors.senha ? inputError : inputBase), paddingRight: 44 }}
+                  {...makeInputHandlers('senha')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowSenha(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-walnut hover:text-espresso transition"
                   tabIndex={-1}
                   aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-walnut)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 4,
+                  }}
                 >
                   {showSenha ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </Campo>
 
+            {/* Confirmar senha */}
             <Campo label="Confirmar senha" id="confirmarSenha" error={errors.confirmarSenha}>
-              <div className="relative">
+              <div style={{ position: 'relative' }}>
                 <input
                   id="confirmarSenha"
                   name="confirmarSenha"
@@ -270,38 +384,78 @@ export default function Cadastro() {
                   value={form.confirmarSenha}
                   onChange={handleChange}
                   placeholder="Repita a senha"
-                  className={`w-full rounded-xl border px-4 py-3 pr-11 font-body text-sm text-espresso bg-white outline-none transition focus:ring-2 focus:ring-teal/40 ${
-                    errors.confirmarSenha ? 'border-red-400' : 'border-sand'
-                  }`}
+                  style={{ ...(errors.confirmarSenha ? inputError : inputBase), paddingRight: 44 }}
+                  {...makeInputHandlers('confirmarSenha')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmar(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-walnut hover:text-espresso transition"
                   tabIndex={-1}
                   aria-label={showConfirmar ? 'Ocultar senha' : 'Mostrar senha'}
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--color-walnut)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 4,
+                  }}
                 >
                   {showConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </Campo>
 
+            {/* Botão */}
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-xl py-3 font-body text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
-              style={{ background: '#024959' }}
+              style={{
+                marginTop: 8,
+                width: '100%',
+                padding: '13px 0',
+                borderRadius: 12,
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                background: 'var(--color-teal)',
+                color: '#fff',
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                fontWeight: 500,
+                letterSpacing: '0.01em',
+                opacity: loading ? 0.65 : 1,
+                transition: 'opacity 0.15s',
+              }}
             >
               {loading ? 'Criando conta…' : 'Criar conta'}
             </button>
           </form>
 
-          <p className="mt-6 text-center font-body text-sm text-walnut">
+          <p style={{
+            marginTop: 24,
+            textAlign: 'center',
+            fontFamily: 'var(--font-body)',
+            fontSize: 14,
+            color: 'var(--color-walnut)',
+          }}>
             Já tem conta?{' '}
-            <Link to="/login" className="font-medium underline" style={{ color: '#024959' }}>
+            <Link
+              to="/login"
+              style={{
+                fontWeight: 500,
+                color: 'var(--color-teal)',
+                textDecoration: 'underline',
+              }}
+            >
               Entrar
             </Link>
           </p>
+
         </div>
       </div>
     </div>
