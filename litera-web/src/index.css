@@ -20,46 +20,42 @@
   --font-body:    'DM Sans', sans-serif;
 }
 
-/* ── Reset base ─────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ── Base styles (dentro do layer para não sobrescrever utilitários) ── */
+@layer base {
+  html {
+    height: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    height: 100%;
+    font-family: var(--font-body);
+    background-color: var(--color-cream);
+    color: var(--color-espresso);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  img, svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  input, button, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.5;
+  }
 }
 
-html {
-  height: 100%;
-  scroll-behavior: smooth;
-}
-
-body {
-  height: 100%;
-  font-family: var(--font-body);
-  background-color: var(--color-cream);
-  color: var(--color-espresso);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
-
-#root {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-img, svg {
-  display: block;
-  max-width: 100%;
-}
-
-input, button, select, textarea {
-  font-family: inherit;
-  font-size: inherit;
-  line-height: 1.5;
-}
-
-/* ── Animações globais (Landing + demais páginas) ────────────────────── */
+/* ── Animações (keyframes não precisam de layer) ─────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -81,6 +77,7 @@ input, button, select, textarea {
   to   { background-position:  200% center; }
 }
 
+/* ── Classes utilitárias customizadas ───────────────────────────────── */
 .anim-fade-up { animation: fadeUp  0.9s cubic-bezier(.22,1,.36,1) both; }
 .anim-fade-in { animation: fadeIn  0.8s ease both; }
 .anim-d1 { animation-delay: .10s; }
@@ -106,7 +103,6 @@ input, button, select, textarea {
   animation: shimmer 4s linear infinite;
 }
 
-/* ── Grain (textura de ruído) ────────────────────────────────────────── */
 .grain::after {
   content: '';
   position: absolute;
@@ -118,7 +114,6 @@ input, button, select, textarea {
   border-radius: inherit;
 }
 
-/* ── Utilitários de card ─────────────────────────────────────────────── */
 .card-hover {
   transition: transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s ease;
 }
@@ -134,13 +129,11 @@ input, button, select, textarea {
   box-shadow: 0 0 0 2px #A7E4F2, 0 32px 60px rgba(2,73,89,0.45);
 }
 
-/* ── Navbar blur ─────────────────────────────────────────────────────── */
 .nav-blur {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* ── Level badge ─────────────────────────────────────────────────────── */
 .level-badge {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -149,7 +142,6 @@ input, button, select, textarea {
   box-shadow: 0 8px 24px rgba(1,24,38,0.3);
 }
 
-/* ── Scroll reveal ───────────────────────────────────────────────────── */
 .scroll-reveal {
   opacity: 0;
   transform: translateY(28px);
