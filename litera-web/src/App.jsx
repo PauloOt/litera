@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { PrivateRoute } from './routes/PrivateRoute';
 import { RoleRoute } from './routes/RoleRoute';
 import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Cadastro from './pages/Cadastro';
 
 const Placeholder = ({ nome }) => (
   <div className="flex items-center justify-center h-screen">
@@ -14,8 +16,8 @@ export default function App() {
     <Routes>
       {/* Públicas */}
       <Route path="/"         element={<Landing />} />
-      <Route path="/login"    element={<Placeholder nome="Login" />} />
-      <Route path="/cadastro" element={<Placeholder nome="Cadastro" />} />
+      <Route path="/login"    element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
 
       {/* Autenticadas */}
       <Route path="/dashboard"      element={<PrivateRoute><Placeholder nome="Dashboard" /></PrivateRoute>} />
