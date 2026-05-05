@@ -1,26 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* Paleta de cores */
+  /* Paleta — 6 cores */
   --color-cream:    #FFF8F0;
   --color-sand:     #E6E0D8;
   --color-stone:    #C08552;
   --color-walnut:   #8C5A3C;
   --color-bark:     #4B2E2B;
   --color-espresso: #2A1917;
-  --color-ink:      #011826;
-  --color-teal:     #024959;
-  --color-sky:      #A7E4F2;
-  --color-blush:    #F2CAB3;
-  --color-mocha:    #623B25;
-  --color-amber:    #734226;
 
   /* Tipografia */
   --font-display: 'Playfair Display', serif;
   --font-body:    'DM Sans', sans-serif;
 }
 
-/* ── Base styles (dentro do layer para não sobrescrever utilitários) ── */
+/* ── Base (dentro do layer para não sobrescrever utilitários) ────────── */
 @layer base {
   html {
     height: 100%;
@@ -55,7 +49,7 @@
   }
 }
 
-/* ── Animações (keyframes não precisam de layer) ─────────────────────── */
+/* ── Animações ───────────────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(32px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -77,7 +71,7 @@
   to   { background-position:  200% center; }
 }
 
-/* ── Classes utilitárias customizadas ───────────────────────────────── */
+/* ── Classes customizadas ────────────────────────────────────────────── */
 .anim-fade-up { animation: fadeUp  0.9s cubic-bezier(.22,1,.36,1) both; }
 .anim-fade-in { animation: fadeIn  0.8s ease both; }
 .anim-d1 { animation-delay: .10s; }
@@ -91,10 +85,10 @@
 .shimmer-text {
   background: linear-gradient(
     90deg,
-    #A7E4F2 0%,
-    #ffffff 40%,
-    #A7E4F2 60%,
-    #ffffff 100%
+    #C08552 0%,
+    #FFF8F0 40%,
+    #C08552 60%,
+    #FFF8F0 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
@@ -119,14 +113,14 @@
 }
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(1,24,38,0.18);
+  box-shadow: 0 20px 40px rgba(42,25,23,0.15);
 }
 
 .plan-popular {
-  box-shadow: 0 0 0 2px #A7E4F2, 0 24px 48px rgba(2,73,89,0.35);
+  box-shadow: 0 0 0 2px #C08552, 0 24px 48px rgba(75,46,43,0.35);
 }
 .plan-popular:hover {
-  box-shadow: 0 0 0 2px #A7E4F2, 0 32px 60px rgba(2,73,89,0.45);
+  box-shadow: 0 0 0 2px #C08552, 0 32px 60px rgba(75,46,43,0.45);
 }
 
 .nav-blur {
@@ -139,7 +133,7 @@
 }
 .level-badge:hover {
   transform: scale(1.04);
-  box-shadow: 0 8px 24px rgba(1,24,38,0.3);
+  box-shadow: 0 8px 24px rgba(42,25,23,0.25);
 }
 
 .scroll-reveal {

@@ -21,50 +21,50 @@ function BookStack() {
     <svg viewBox="0 0 380 440" fill="none" xmlns="http://www.w3.org/2000/svg"
       className="w-full h-full anim-float" style={{ maxHeight: 400 }}>
       {/* Sombra base */}
-      <ellipse cx="190" cy="400" rx="110" ry="14" fill="#011826" opacity="0.4" />
+      <ellipse cx="190" cy="400" rx="110" ry="14" fill="#2A1917" opacity="0.4" />
 
       {/* Livro fundo esquerdo */}
-      <rect x="40" y="100" width="100" height="240" rx="6" fill="#024959" opacity="0.7" />
-      <rect x="40" y="100" width="14" height="240" rx="4" fill="#A7E4F2" opacity="0.3" />
-      <rect x="62" y="130" width="58" height="5" rx="2.5" fill="#A7E4F2" opacity="0.4" />
-      <rect x="62" y="145" width="44" height="4" rx="2" fill="#A7E4F2" opacity="0.2" />
+      <rect x="40" y="100" width="100" height="240" rx="6" fill="#4B2E2B" opacity="0.7" />
+      <rect x="40" y="100" width="14" height="240" rx="4" fill="#C08552" opacity="0.3" />
+      <rect x="62" y="130" width="58" height="5" rx="2.5" fill="#E6E0D8" opacity="0.4" />
+      <rect x="62" y="145" width="44" height="4" rx="2" fill="#E6E0D8" opacity="0.2" />
 
       {/* Livro principal centro */}
-      <rect x="130" y="60" width="130" height="300" rx="8" fill="#011826" />
-      <rect x="130" y="60"  width="20" height="300" rx="6" fill="#A7E4F2" opacity="0.45" />
+      <rect x="130" y="60" width="130" height="300" rx="8" fill="#2A1917" />
+      <rect x="130" y="60" width="20" height="300" rx="6" fill="#C08552" opacity="0.45" />
       {/* spine shine */}
-      <rect x="135" y="60" width="4" height="300" rx="2" fill="white" opacity="0.08" />
-      <rect x="160" y="100" width="78" height="6" rx="3" fill="#A7E4F2" opacity="0.7" />
-      <rect x="160" y="116" width="58" height="4" rx="2" fill="#A7E4F2" opacity="0.35" />
-      <rect x="160" y="130" width="68" height="4" rx="2" fill="#A7E4F2" opacity="0.25" />
-      <rect x="160" y="144" width="48" height="4" rx="2" fill="#A7E4F2" opacity="0.25" />
+      <rect x="135" y="60" width="4" height="300" rx="2" fill="white" opacity="0.06" />
+      <rect x="160" y="100" width="78" height="6" rx="3" fill="#E6E0D8" opacity="0.6" />
+      <rect x="160" y="116" width="58" height="4" rx="2" fill="#E6E0D8" opacity="0.3" />
+      <rect x="160" y="130" width="68" height="4" rx="2" fill="#E6E0D8" opacity="0.2" />
+      <rect x="160" y="144" width="48" height="4" rx="2" fill="#E6E0D8" opacity="0.2" />
       {/* decoração losango */}
-      <rect x="195" y="230" width="24" height="24" rx="4" fill="#024959" transform="rotate(45 195 230)" />
-      <rect x="197" y="232" width="20" height="20" rx="3" fill="none" stroke="#A7E4F2" strokeWidth="1.2" strokeOpacity="0.5" transform="rotate(45 197 232)" />
+      <rect x="195" y="230" width="24" height="24" rx="4" fill="#4B2E2B" transform="rotate(45 195 230)" />
+      <rect x="197" y="232" width="20" height="20" rx="3" fill="none" stroke="#C08552" strokeWidth="1.2" strokeOpacity="0.5" transform="rotate(45 197 232)" />
 
       {/* Livro direita */}
-      <rect x="250" y="130" width="90" height="210" rx="6" fill="#024959" opacity="0.85" />
-      <rect x="250" y="130" width="13" height="210" rx="4" fill="#A7E4F2" opacity="0.35" />
-      <rect x="270" y="165" width="52" height="5" rx="2.5" fill="#A7E4F2" opacity="0.55" />
-      <rect x="270" y="180" width="38" height="4" rx="2" fill="#A7E4F2" opacity="0.28" />
+      <rect x="250" y="130" width="90" height="210" rx="6" fill="#4B2E2B" opacity="0.85" />
+      <rect x="250" y="130" width="13" height="210" rx="4" fill="#C08552" opacity="0.35" />
+      <rect x="270" y="165" width="52" height="5" rx="2.5" fill="#E6E0D8" opacity="0.5" />
+      <rect x="270" y="180" width="38" height="4" rx="2" fill="#E6E0D8" opacity="0.25" />
 
       {/* Livro deitado embaixo */}
-      <rect x="80" y="358" width="220" height="26" rx="6" fill="#A7E4F2" opacity="0.1" />
-      <rect x="80" y="358" width="220" height="26" rx="6" stroke="#A7E4F2" strokeWidth="1" strokeOpacity="0.25" />
-      <rect x="80" y="358" width="30" height="26" rx="6" fill="#A7E4F2" opacity="0.12" />
+      <rect x="80" y="358" width="220" height="26" rx="6" fill="#C08552" opacity="0.1" />
+      <rect x="80" y="358" width="220" height="26" rx="6" stroke="#C08552" strokeWidth="1" strokeOpacity="0.25" />
+      <rect x="80" y="358" width="30" height="26" rx="6" fill="#C08552" opacity="0.12" />
 
       {/* Marcador de página */}
-      <rect x="218" y="40" width="10" height="55" rx="5" fill="#C08552" opacity="0.7" />
-      <polygon points="213,92 228,92 220.5,108" fill="#C08552" opacity="0.7" />
+      <rect x="218" y="40" width="10" height="55" rx="5" fill="#C08552" opacity="0.8" />
+      <polygon points="213,92 228,92 220.5,108" fill="#C08552" opacity="0.8" />
 
       {/* Partículas */}
-      <circle cx="345" cy="90"  r="4" fill="#A7E4F2" opacity="0.35" />
-      <circle cx="55"  cy="320" r="3" fill="#A7E4F2" opacity="0.25" />
-      <circle cx="330" cy="290" r="5" fill="#024959" opacity="0.5" />
-      <circle cx="100" cy="80"  r="2.5" fill="#C08552" opacity="0.45" />
+      <circle cx="345" cy="90"  r="4" fill="#C08552" opacity="0.35" />
+      <circle cx="55"  cy="320" r="3" fill="#E6E0D8" opacity="0.25" />
+      <circle cx="330" cy="290" r="5" fill="#4B2E2B" opacity="0.5" />
+      <circle cx="100" cy="80"  r="2.5" fill="#8C5A3C" opacity="0.45" />
 
       {/* Linha decorativa */}
-      <line x1="40" y1="52" x2="120" y2="52" stroke="#A7E4F2" strokeWidth="1" strokeOpacity="0.2" />
+      <line x1="40" y1="52" x2="120" y2="52" stroke="#C08552" strokeWidth="1" strokeOpacity="0.25" />
     </svg>
   );
 }
@@ -82,7 +82,7 @@ function Navbar() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-8 transition-all duration-300 ${
         scrolled
-          ? 'bg-ink/90 nav-blur shadow-2xl shadow-black/30'
+          ? 'bg-espresso/90 nav-blur shadow-2xl shadow-espresso/30'
           : 'bg-transparent'
       }`}
     >
@@ -91,19 +91,18 @@ function Navbar() {
         LITERA
       </span>
 
-      {/* Linha separadora vertical decorativa */}
       <div className="hidden md:block w-px h-5 bg-walnut/40 mx-6" />
 
       <nav className="flex items-center gap-3">
         <Link
           to="/login"
-          className="px-4 py-2 text-sky text-sm font-body font-medium border border-sky/40 rounded-lg hover:border-sky hover:bg-sky/8 transition-all duration-200"
+          className="px-4 py-2 text-stone text-sm font-body font-medium border border-stone/40 rounded-lg hover:border-stone hover:bg-stone/10 transition-all duration-200"
         >
           Entrar
         </Link>
         <Link
           to="/cadastro"
-          className="px-4 py-2 bg-teal text-cream text-sm font-body font-medium rounded-lg hover:bg-teal/80 transition-colors duration-200"
+          className="px-4 py-2 bg-bark text-cream text-sm font-body font-medium rounded-lg hover:opacity-85 transition-opacity duration-200"
         >
           Criar conta
         </Link>
@@ -121,10 +120,10 @@ const marqueeItems = [
 function Marquee() {
   const doubled = [...marqueeItems, ...marqueeItems];
   return (
-    <div className="overflow-hidden py-3 border-y border-sky/15" style={{ background: 'rgba(2,73,89,0.35)' }}>
+    <div className="overflow-hidden py-3 border-y border-stone/20" style={{ background: 'rgba(75,46,43,0.4)' }}>
       <div className="flex gap-8 marquee-track whitespace-nowrap" style={{ width: 'max-content' }}>
         {doubled.map((item, i) => (
-          <span key={i} className="font-body text-xs font-medium tracking-[0.2em] uppercase text-sky/60">
+          <span key={i} className="font-body text-xs font-medium tracking-[0.2em] uppercase text-stone/60">
             {item}
           </span>
         ))}
@@ -137,9 +136,9 @@ function Marquee() {
 function Hero() {
   return (
     <section
-      className="relative grain min-h-screen bg-ink flex flex-col overflow-hidden"
+      className="relative grain min-h-screen flex flex-col overflow-hidden"
       style={{
-        background: 'radial-gradient(ellipse 70% 60% at 30% 50%, #013345 0%, #011826 60%)',
+        background: 'radial-gradient(ellipse 70% 60% at 30% 50%, #3a1f1c 0%, #2A1917 60%)',
       }}
     >
       {/* Glow decorativo */}
@@ -148,7 +147,7 @@ function Hero() {
         style={{
           top: '15%', right: '5%',
           width: 480, height: 480,
-          background: 'radial-gradient(circle, rgba(2,73,89,0.35) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(192,133,82,0.18) 0%, transparent 70%)',
           borderRadius: '50%',
           filter: 'blur(40px)',
         }}
@@ -161,8 +160,8 @@ function Hero() {
           <div>
             {/* Label */}
             <div className="anim-fade-up anim-d1 flex items-center gap-3 mb-8">
-              <span className="w-8 h-px bg-sky/60" />
-              <span className="font-body text-xs font-medium tracking-[0.25em] uppercase text-sky/70">
+              <span className="w-8 h-px bg-stone/60" />
+              <span className="font-body text-xs font-medium tracking-[0.25em] uppercase text-stone/70">
                 Plataforma literária
               </span>
             </div>
@@ -192,14 +191,14 @@ function Hero() {
             <div className="anim-fade-up anim-d4 flex flex-wrap gap-4">
               <Link
                 to="/cadastro"
-                className="group inline-flex items-center gap-2 px-7 py-3.5 bg-teal text-cream font-body font-medium rounded-xl hover:bg-teal/80 transition-all duration-200"
+                className="group inline-flex items-center gap-2 px-7 py-3.5 bg-bark text-cream font-body font-medium rounded-xl hover:opacity-85 transition-opacity duration-200"
               >
                 Criar conta grátis
                 <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
               <a
                 href="#planos"
-                className="inline-flex items-center gap-2 px-7 py-3.5 border border-stone/60 text-stone font-body font-medium rounded-xl hover:border-stone hover:bg-stone/8 transition-all duration-200"
+                className="inline-flex items-center gap-2 px-7 py-3.5 border border-stone/60 text-stone font-body font-medium rounded-xl hover:border-stone hover:bg-stone/10 transition-all duration-200"
               >
                 Ver planos
               </a>
@@ -211,8 +210,8 @@ function Hero() {
                 {['E', 'M', 'R', 'L'].map((l, i) => (
                   <div
                     key={i}
-                    className="w-7 h-7 rounded-full border-2 border-ink flex items-center justify-center font-body text-[10px] font-medium text-cream"
-                    style={{ background: ['#024959', '#734226', '#C08552', '#024959'][i] }}
+                    className="w-7 h-7 rounded-full border-2 border-espresso flex items-center justify-center font-body text-[10px] font-medium text-cream"
+                    style={{ background: ['#4B2E2B', '#8C5A3C', '#C08552', '#4B2E2B'][i] }}
                   >
                     {l}
                   </div>
@@ -275,7 +274,7 @@ function Pilares() {
             >
               Tudo que você precisa
               <br />
-              para <span style={{ color: '#024959' }}>ler mais.</span>
+              para <span className="text-stone">ler mais.</span>
             </h2>
           </div>
           <Link
@@ -297,20 +296,18 @@ function Pilares() {
               {/* Número decorativo */}
               <span
                 className="absolute top-4 right-5 font-display font-bold select-none pointer-events-none"
-                style={{ fontSize: 72, color: '#024959', opacity: 0.06, lineHeight: 1 }}
+                style={{ fontSize: 72, color: '#4B2E2B', opacity: 0.06, lineHeight: 1 }}
               >
                 {num}
               </span>
 
               {/* Ícone */}
-              <div className="w-12 h-12 rounded-xl bg-teal flex items-center justify-center shrink-0">
-                <Icon size={22} className="text-sky" />
+              <div className="w-12 h-12 rounded-xl bg-bark flex items-center justify-center shrink-0">
+                <Icon size={22} className="text-stone" />
               </div>
 
               {/* Borda hover */}
-              <div
-                className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-2xl bg-teal origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-              />
+              <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-2xl bg-stone origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
 
               <div>
                 <h3 className="font-display font-semibold text-espresso text-lg mb-2">{titulo}</h3>
@@ -326,42 +323,42 @@ function Pilares() {
 
 /* ─── Gamificação ────────────────────────────────────────────────────── */
 const niveis = [
-  { emoji: '🥉', nome: 'Bronze',   faixa: '0 – 499',      cor: '#734226' },
+  { emoji: '🥉', nome: 'Bronze',   faixa: '0 – 499',      cor: '#C08552' },
   { emoji: '🥈', nome: 'Prata',    faixa: '500 – 1.499',   cor: '#8C8C9A' },
   { emoji: '🥇', nome: 'Ouro',     faixa: '1.500 – 3.999', cor: '#BFA030' },
-  { emoji: '💎', nome: 'Platina',  faixa: '4.000 – 9.999', cor: '#A7E4F2' },
-  { emoji: '👑', nome: 'Diamante', faixa: '10.000+',       cor: '#E8D5B7' },
+  { emoji: '💎', nome: 'Platina',  faixa: '4.000 – 9.999', cor: '#E6E0D8' },
+  { emoji: '👑', nome: 'Diamante', faixa: '10.000+',       cor: '#FFF8F0' },
 ];
 
 const acoes = [
-  { icon: BookOpen,     texto: 'Devolver no prazo',      pts: '+20' },
-  { icon: Star,         texto: 'Avaliar com resenha',    pts: '+25' },
-  { icon: CalendarDays, texto: 'Participar de evento',   pts: '+40' },
-  { icon: ArrowUpRight, texto: 'Indicar um amigo',       pts: '+50' },
+  { icon: BookOpen,     texto: 'Devolver no prazo',    pts: '+20' },
+  { icon: Star,         texto: 'Avaliar com resenha',  pts: '+25' },
+  { icon: CalendarDays, texto: 'Participar de evento', pts: '+40' },
+  { icon: ArrowUpRight, texto: 'Indicar um amigo',     pts: '+50' },
 ];
 
 function Gamificacao() {
   return (
-    <section className="grain relative py-28 px-8 overflow-hidden" style={{ background: '#013240' }}>
+    <section className="grain relative py-28 px-8 overflow-hidden bg-bark">
       {/* glow */}
       <div
         className="absolute pointer-events-none"
         style={{
           bottom: '-10%', right: '-5%',
           width: 600, height: 600,
-          background: 'radial-gradient(circle, rgba(167,228,242,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(192,133,82,0.12) 0%, transparent 70%)',
           filter: 'blur(60px)',
         }}
       />
 
       <div className="max-w-6xl mx-auto relative">
         <div className="scroll-reveal text-center mb-16">
-          <span className="font-body text-xs font-medium tracking-[0.25em] uppercase text-sky/50 block mb-3">
+          <span className="font-body text-xs font-medium tracking-[0.25em] uppercase text-stone/60 block mb-3">
             Gamificação
           </span>
           <h2
-            className="font-display font-bold leading-tight mb-4"
-            style={{ fontSize: 'clamp(2rem, 4vw, 2.8rem)', color: '#A7E4F2' }}
+            className="font-display font-bold leading-tight mb-4 text-stone"
+            style={{ fontSize: 'clamp(2rem, 4vw, 2.8rem)' }}
           >
             Leia mais, ganhe mais.
           </h2>
@@ -373,15 +370,15 @@ function Gamificacao() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Níveis */}
           <div className="scroll-reveal">
-            <p className="font-body text-xs font-medium tracking-[0.2em] uppercase text-sky/50 mb-5">Níveis</p>
+            <p className="font-body text-xs font-medium tracking-[0.2em] uppercase text-stone/60 mb-5">Níveis</p>
             <div className="flex flex-col gap-3">
               {niveis.map(({ emoji, nome, faixa, cor }, i) => (
                 <div
                   key={nome}
                   className="level-badge flex items-center gap-4 rounded-xl px-4 py-3.5 cursor-default"
                   style={{
-                    background: 'rgba(1,24,38,0.45)',
-                    border: '1px solid rgba(167,228,242,0.08)',
+                    background: 'rgba(42,25,23,0.5)',
+                    border: '1px solid rgba(192,133,82,0.15)',
                     transitionDelay: `${i * 0.07}s`,
                   }}
                 >
@@ -401,7 +398,7 @@ function Gamificacao() {
 
           {/* Ações */}
           <div className="scroll-reveal" style={{ transitionDelay: '0.15s' }}>
-            <p className="font-body text-xs font-medium tracking-[0.2em] uppercase text-sky/50 mb-5">
+            <p className="font-body text-xs font-medium tracking-[0.2em] uppercase text-stone/60 mb-5">
               Como ganhar pontos
             </p>
             <div className="flex flex-col gap-3">
@@ -410,20 +407,20 @@ function Gamificacao() {
                   key={texto}
                   className="flex items-center gap-4 rounded-xl px-4 py-4"
                   style={{
-                    background: 'rgba(1,24,38,0.45)',
-                    border: '1px solid rgba(167,228,242,0.08)',
+                    background: 'rgba(42,25,23,0.5)',
+                    border: '1px solid rgba(192,133,82,0.12)',
                   }}
                 >
                   <div
                     className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: 'rgba(2,73,89,0.6)' }}
+                    style={{ background: 'rgba(42,25,23,0.6)' }}
                   >
-                    <Icon size={16} className="text-sky" />
+                    <Icon size={16} className="text-stone" />
                   </div>
                   <p className="font-body text-sm text-cream/80 flex-1">{texto}</p>
                   <span
                     className="font-body font-medium text-sm px-2.5 py-1 rounded-lg"
-                    style={{ background: 'rgba(167,228,242,0.12)', color: '#A7E4F2' }}
+                    style={{ background: 'rgba(192,133,82,0.2)', color: '#C08552' }}
                   >
                     {pts} pts
                   </span>
@@ -435,11 +432,11 @@ function Gamificacao() {
             <div
               className="mt-5 rounded-xl p-4"
               style={{
-                background: 'rgba(2,73,89,0.3)',
-                border: '1px solid rgba(167,228,242,0.12)',
+                background: 'rgba(42,25,23,0.5)',
+                border: '1px solid rgba(192,133,82,0.15)',
               }}
             >
-              <p className="font-body text-xs text-sky/70 mb-3 uppercase tracking-widest">Multiplicadores por plano</p>
+              <p className="font-body text-xs text-stone/70 mb-3 uppercase tracking-widest">Multiplicadores por plano</p>
               <div className="flex gap-4">
                 {[['Gratuito', '1×'], ['Pro', '1.5×'], ['Premium', '2×']].map(([p, m]) => (
                   <div key={p} className="flex-1 text-center">
@@ -468,8 +465,8 @@ const planos = [
       titulo: '#8C5A3C',
       preco: '#2A1917',
       sub: '#8C5A3C',
-      btn: 'border border-teal text-teal hover:bg-teal hover:text-cream',
-      check: '#024959',
+      btn: 'border border-bark text-bark hover:bg-bark hover:text-cream',
+      check: '#4B2E2B',
       item: '#4B2E2B',
     },
     beneficios: ['Leituras ilimitadas', 'Favoritos ilimitados', 'Lista de desejos', 'Sem desconto em eventos', 'Multiplicador 1×'],
@@ -481,13 +478,13 @@ const planos = [
     sub: '/mês',
     popular: true,
     esquema: {
-      wrapper: { background: '#011826' },
-      titulo: '#A7E4F2',
-      preco: '#ffffff',
-      sub: '#A7E4F2',
-      btn: 'bg-teal text-cream hover:bg-teal/80',
-      check: '#A7E4F2',
-      item: 'rgba(255,255,255,0.75)',
+      wrapper: { background: '#2A1917' },
+      titulo: '#C08552',
+      preco: '#FFF8F0',
+      sub: '#C08552',
+      btn: 'bg-stone text-cream hover:opacity-85',
+      check: '#C08552',
+      item: 'rgba(255,248,240,0.8)',
     },
     beneficios: ['Tudo do Gratuito', '10% de desconto em eventos', 'Multiplicador 1.5× de pontos', 'Badge Pro exclusivo'],
     cta: 'Assinar Pro',
@@ -498,13 +495,13 @@ const planos = [
     sub: '/mês',
     popular: false,
     esquema: {
-      wrapper: { background: '#024959', border: '1px solid rgba(167,228,242,0.2)' },
-      titulo: '#A7E4F2',
-      preco: '#ffffff',
-      sub: '#A7E4F2',
-      btn: 'bg-cream text-teal font-medium hover:bg-cream/90',
-      check: '#A7E4F2',
-      item: 'rgba(255,255,255,0.75)',
+      wrapper: { background: '#4B2E2B', border: '1px solid rgba(192,133,82,0.3)' },
+      titulo: '#C08552',
+      preco: '#FFF8F0',
+      sub: '#C08552',
+      btn: 'bg-cream text-bark hover:opacity-85',
+      check: '#C08552',
+      item: 'rgba(255,248,240,0.8)',
     },
     beneficios: ['Tudo do Pro', '25% de desconto em eventos', 'Multiplicador 2× de pontos', 'Badge Premium exclusivo', 'Suporte prioritário'],
     cta: 'Assinar Premium',
@@ -544,7 +541,7 @@ function Planos() {
               {p.popular && (
                 <div
                   className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full font-body text-xs font-medium"
-                  style={{ background: '#A7E4F2', color: '#011826' }}
+                  style={{ background: '#C08552', color: '#FFF8F0' }}
                 >
                   Mais popular
                 </div>
@@ -595,16 +592,15 @@ function Planos() {
 /* ─── CTA Final ──────────────────────────────────────────────────────── */
 function CTAFinal() {
   return (
-    <section className="grain relative bg-ink py-32 px-8 text-center overflow-hidden">
-      {/* glow central */}
+    <section className="grain relative bg-espresso py-32 px-8 text-center overflow-hidden">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(2,73,89,0.4) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(75,46,43,0.5) 0%, transparent 70%)',
         }}
       />
       <div className="relative scroll-reveal">
-        <span className="font-body text-xs font-medium tracking-[0.25em] uppercase text-sky/50 block mb-4">
+        <span className="font-body text-xs font-medium tracking-[0.25em] uppercase text-stone/50 block mb-4">
           Comece hoje
         </span>
         <h2
@@ -618,7 +614,7 @@ function CTAFinal() {
         </p>
         <Link
           to="/cadastro"
-          className="group inline-flex items-center gap-2 px-9 py-4 bg-teal text-cream font-body font-medium rounded-xl hover:bg-teal/80 transition-all duration-200 text-base"
+          className="group inline-flex items-center gap-2 px-9 py-4 bg-bark text-cream font-body font-medium rounded-xl hover:opacity-85 transition-opacity duration-200 text-base"
         >
           Criar conta grátis
           <ArrowUpRight size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

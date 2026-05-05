@@ -8,14 +8,14 @@ import api from '../services/api';
 function DecoSVG() {
   return (
     <svg viewBox="0 0 400 500" className="w-full max-w-xs opacity-20" aria-hidden="true">
-      <rect x="40"  y="60"  width="80"  height="110" rx="6" fill="#A7E4F2" transform="rotate(-8,80,115)" />
-      <rect x="150" y="30"  width="80"  height="110" rx="6" fill="#024959" transform="rotate(5,190,85)" />
-      <rect x="260" y="80"  width="80"  height="110" rx="6" fill="#A7E4F2" transform="rotate(-4,300,135)" />
-      <rect x="80"  y="220" width="80"  height="110" rx="6" fill="#024959" transform="rotate(6,120,275)" />
-      <rect x="200" y="200" width="80"  height="110" rx="6" fill="#A7E4F2" transform="rotate(-5,240,255)" />
-      <rect x="310" y="250" width="80"  height="110" rx="6" fill="#024959" transform="rotate(3,350,305)" />
-      <line x1="20"  y1="400" x2="380" y2="400" stroke="#A7E4F2" strokeWidth="2" opacity="0.4" />
-      <line x1="20"  y1="420" x2="280" y2="420" stroke="#A7E4F2" strokeWidth="2" opacity="0.3" />
+      <rect x="40"  y="60"  width="80"  height="110" rx="6" fill="#C08552" transform="rotate(-8,80,115)" />
+      <rect x="150" y="30"  width="80"  height="110" rx="6" fill="#4B2E2B" transform="rotate(5,190,85)" />
+      <rect x="260" y="80"  width="80"  height="110" rx="6" fill="#E6E0D8" transform="rotate(-4,300,135)" />
+      <rect x="80"  y="220" width="80"  height="110" rx="6" fill="#4B2E2B" transform="rotate(6,120,275)" />
+      <rect x="200" y="200" width="80"  height="110" rx="6" fill="#C08552" transform="rotate(-5,240,255)" />
+      <rect x="310" y="250" width="80"  height="110" rx="6" fill="#8C5A3C" transform="rotate(3,350,305)" />
+      <line x1="20"  y1="400" x2="380" y2="400" stroke="#C08552" strokeWidth="2" opacity="0.4" />
+      <line x1="20"  y1="420" x2="280" y2="420" stroke="#C08552" strokeWidth="2" opacity="0.3" />
     </svg>
   );
 }
@@ -110,8 +110,8 @@ export default function Login() {
   };
   const inputError = { ...inputBase, borderColor: '#EF4444' };
   const inputFocus = {
-    borderColor: 'var(--color-teal)',
-    boxShadow: '0 0 0 3px rgba(2,73,89,0.15)',
+    borderColor: 'var(--color-stone)',
+    boxShadow: '0 0 0 3px rgba(192,133,82,0.2)',
   };
 
   return (
@@ -128,7 +128,7 @@ export default function Login() {
           justifyContent: 'center',
           gap: 32,
           padding: '40px',
-          background: 'var(--color-ink)',
+          background: 'var(--color-espresso)',
         }}
       >
         <div style={{ textAlign: 'center' }}>
@@ -156,7 +156,7 @@ export default function Login() {
         <DecoSVG />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BookOpen size={16} style={{ color: 'var(--color-teal)' }} />
+          <BookOpen size={16} style={{ color: 'var(--color-stone)' }} />
           <span style={{
             fontFamily: 'var(--font-body)',
             fontSize: 12,
@@ -303,8 +303,8 @@ export default function Login() {
                 borderRadius: 12,
                 border: 'none',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                background: 'var(--color-teal)',
-                color: '#fff',
+                background: 'var(--color-bark)',
+                color: 'var(--color-cream)',
                 fontFamily: 'var(--font-body)',
                 fontSize: 14,
                 fontWeight: 500,
@@ -329,7 +329,7 @@ export default function Login() {
               to="/cadastro"
               style={{
                 fontWeight: 500,
-                color: 'var(--color-teal)',
+                color: 'var(--color-stone)',
                 textDecoration: 'underline',
               }}
             >
