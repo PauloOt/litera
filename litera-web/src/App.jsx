@@ -5,6 +5,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Cadastro from './pages/Cadastro';
 import Dashboard from './pages/Dashboard';
+import Leituras from './pages/Leituras';
 
 const Placeholder = ({ nome }) => (
   <div className="flex items-center justify-center h-screen">
@@ -22,7 +23,7 @@ export default function App() {
 
       {/* Autenticadas */}
       <Route path="/dashboard"      element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      <Route path="/leituras"       element={<PrivateRoute><Placeholder nome="Leituras" /></PrivateRoute>} />
+      <Route path="/leituras"       element={<PrivateRoute><Leituras /></PrivateRoute>} />
       <Route path="/mercado"        element={<PrivateRoute><Placeholder nome="Mercado" /></PrivateRoute>} />
       <Route path="/eventos"        element={<PrivateRoute><Placeholder nome="Eventos" /></PrivateRoute>} />
       <Route path="/eventos/:id"    element={<PrivateRoute><Placeholder nome="Evento Detalhe" /></PrivateRoute>} />
