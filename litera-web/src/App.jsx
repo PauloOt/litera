@@ -11,6 +11,8 @@ import Eventos from './pages/Eventos';
 import EventoDetalhe from './pages/EventoDetalhe';
 import MeusIngressos from './pages/MeusIngressos';
 import Pontos from './pages/Pontos';
+import Perfil from './pages/Perfil';
+import Planos from './pages/Planos';
 
 const Placeholder = ({ nome }) => (
   <div className="flex items-center justify-center h-screen">
@@ -33,8 +35,8 @@ export default function App() {
       <Route path="/eventos"          element={<PrivateRoute><Eventos /></PrivateRoute>} />
       <Route path="/eventos/:id"       element={<PrivateRoute><EventoDetalhe /></PrivateRoute>} />
       <Route path="/pontos"         element={<PrivateRoute><Pontos /></PrivateRoute>} />
-      <Route path="/perfil"         element={<PrivateRoute><Placeholder nome="Perfil" /></PrivateRoute>} />
-      <Route path="/planos"         element={<PrivateRoute><Placeholder nome="Planos" /></PrivateRoute>} />
+      <Route path="/perfil"         element={<PrivateRoute><Perfil /></PrivateRoute>} />
+      <Route path="/planos"         element={<PrivateRoute><Planos /></PrivateRoute>} />
       <Route path="/meus-ingressos"    element={<PrivateRoute><MeusIngressos /></PrivateRoute>} />
 
       {/* Admin / Organizador */}
