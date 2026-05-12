@@ -31,7 +31,9 @@ export function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-[72px] bg-espresso flex flex-col items-center py-4 z-50">
       {/* Logo */}
-      <div className="mb-6 text-cream font-display font-bold text-lg leading-none text-center select-none">
+      <div
+        className="mb-6 text-cream font-display font-bold text-lg leading-none text-center select-none"
+      >
         L
       </div>
 

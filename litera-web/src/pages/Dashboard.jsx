@@ -246,7 +246,8 @@ export default function Dashboard() {
     <div className="flex min-h-screen bg-cream">
       <Sidebar />
 
-      <main className="flex-1 ml-[72px] p-6 md:p-10 max-w-5xl">
+      <main className="flex-1 ml-[72px] py-6 md:py-8 px-4 md:px-8 page-enter">
+        <div className="max-w-5xl mx-auto w-full">
 
         {/* Cabeçalho */}
         <header className="mb-8">
@@ -281,6 +282,7 @@ export default function Dashboard() {
           <SecaoEventos eventos={eventos} />
         </div>
 
+        </div>
       </main>
     </div>
   );

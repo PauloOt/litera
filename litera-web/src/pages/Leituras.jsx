@@ -430,7 +430,8 @@ export default function Leituras() {
     <div className="flex min-h-screen bg-cream">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8 ml-0 md:ml-64">
+      <main className="flex-1 ml-[72px] py-6 md:py-8 px-4 md:px-8 page-enter">
+        <div className="max-w-5xl mx-auto w-full">
         {/* Cabeçalho */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="font-display font-bold text-3xl text-espresso">Minhas Leituras</h1>
@@ -478,6 +479,7 @@ export default function Leituras() {
             )}
           </>
         )}
+        </div>
       </main>
 
       <ModalNovaLeitura

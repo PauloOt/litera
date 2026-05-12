@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 @theme {
   /* Paleta — 6 cores */
   --color-cream:    #FFF8F0;
@@ -74,6 +75,9 @@
 /* ── Classes customizadas ────────────────────────────────────────────── */
 .anim-fade-up { animation: fadeUp  0.9s cubic-bezier(.22,1,.36,1) both; }
 .anim-fade-in { animation: fadeIn  0.8s ease both; }
+
+/* ── Transição de página (authenticated routes) ──────────────────────── */
+.page-enter { animation: fadeUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .anim-d1 { animation-delay: .10s; }
 .anim-d2 { animation-delay: .25s; }
 .anim-d3 { animation-delay: .42s; }

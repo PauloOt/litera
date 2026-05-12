@@ -1,0 +1,311 @@
+import { useEffect, useState } from 'react';
+import { Plus, CalendarDays, Users, Clock, CheckCircle, XCircle, Pencil } from 'lucide-react';
+import { Sidebar } from '../components/Sidebar';
+import { Modal } from '../components/Modal';
+import api from '../services/api';
+
+/* ─── Utilitários ────────────────────────────────────────────────────── */
+function formatarData(str) {
+  if (!str) return '—';
+  return new Date(str).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatarPreco(v) {
+  if (v == null || v === 0) return 'Gratuito';
+  return `R$ ${Number(v).toFixed(2)}`;
+}
+
+/* ─── Badge de status do evento ──────────────────────────────────────── */
+function BadgeEvento({ status }) {
+  const map = {
+    PENDENTE:  { bg: 'bg-sand',       texto: 'text-walnut', label: 'Pendente' },
+    APROVADO:  { bg: 'bg-green-100',  texto: 'text-green-700', label: 'Aprovado' },
+    CANCELADO: { bg: 'bg-red-100',    texto: 'text-red-600',  label: 'Cancelado' },
+    REJEITADO: { bg: 'bg-red-100',    texto: 'text-red-600',  label: 'Rejeitado' },
+  };
+  const { bg, texto, label } = map[status] ?? map.PENDENTE;
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-body font-medium ${bg} ${texto}`}>
+      {label}
+    </span>
+  );
+}
+
+/* ─── Campos do formulário ───────────────────────────────────────────── */
+const inputCls = {
+  width: '100%',
+  border: '1px solid var(--color-sand)',
+  borderRadius: 10,
+  padding: '10px 14px',
+  fontFamily: 'var(--font-body)',
+  fontSize: 14,
+  color: 'var(--color-espresso)',
+  backgroundColor: '#fff',
+  outline: 'none',
+  boxSizing: 'border-box',
+};
+
+function Campo({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <label style={{ fontFamily: 'var(--font-body)', fontSize: 12, fontWeight: 500, color: 'var(--color-walnut)' }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+/* ─── Modal criar/editar evento ──────────────────────────────────────── */
+const FORM_VAZIO = { titulo: '', descricao: '', local: '', data: '', preco: '', vagas: '', capa: '' };
+
+function ModalEvento({ aberto, onFechar, onSalvo }) {
+  const [form, setForm]       = useState(FORM_VAZIO);
+  const [erro, setErro]       = useState('');
+  const [salvando, setSalvando] = useState(false);
+
+  function handleChange(e) {
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    setErro('');
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.titulo.trim() || !form.local.trim() || !form.data) {
+      setErro('Preencha título, local e data.');
+      return;
+    }
+    setSalvando(true);
+    try {
+      const payload = {
+        titulo: form.titulo,
+        descricao: form.descricao,
+        local: form.local,
+        data: form.data,
+        preco: Number(form.preco) || 0,
+        vagasTotais: Number(form.vagas) || 0,
+        capa: form.capa || null,
+      };
+      const { data } = await api.post('/eventos', payload);
+      onSalvo(data);
+      setForm(FORM_VAZIO);
+      onFechar();
+    } catch {
+      setErro('Erro ao criar evento. Tente novamente.');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  function handleFechar() {
+    setForm(FORM_VAZIO);
+    setErro('');
+    onFechar();
+  }
+
+  return (
+    <Modal isOpen={aberto} onClose={handleFechar} title="Criar novo evento">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <Campo label="Título *">
+          <input name="titulo" value={form.titulo} onChange={handleChange} style={inputCls} placeholder="Nome do evento" />
+        </Campo>
+        <Campo label="Descrição">
+          <textarea
+            name="descricao" value={form.descricao} onChange={handleChange}
+            rows={3} style={{ ...inputCls, resize: 'vertical' }}
+            placeholder="Descreva o evento..."
+          />
+        </Campo>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <Campo label="Local *">
+            <input name="local" value={form.local} onChange={handleChange} style={inputCls} placeholder="Rua, cidade..." />
+          </Campo>
+          <Campo label="Data e hora *">
+            <input name="data" type="datetime-local" value={form.data} onChange={handleChange} style={inputCls} />
+          </Campo>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <Campo label="Preço (R$) — 0 = gratuito">
+            <input name="preco" type="number" min="0" step="0.01" value={form.preco} onChange={handleChange} style={inputCls} placeholder="0,00" />
+          </Campo>
+          <Campo label="Vagas totais">
+            <input name="vagas" type="number" min="0" value={form.vagas} onChange={handleChange} style={inputCls} placeholder="Ex: 100" />
+          </Campo>
+        </div>
+        <Campo label="URL da imagem de capa (opcional)">
+          <input name="capa" value={form.capa} onChange={handleChange} style={inputCls} placeholder="https://..." />
+        </Campo>
+
+        {erro && <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#EF4444' }}>{erro}</p>}
+
+        <div className="flex gap-3 pt-2">
+          <button
+            type="submit" disabled={salvando}
+            style={{
+              flex: 1, padding: '11px 0', borderRadius: 10, border: 'none',
+              background: 'var(--color-bark)', color: 'var(--color-cream)',
+              fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500,
+              cursor: salvando ? 'not-allowed' : 'pointer', opacity: salvando ? 0.65 : 1,
+            }}
+          >
+            {salvando ? 'Criando…' : 'Criar evento'}
+          </button>
+          <button
+            type="button" onClick={handleFechar}
+            style={{
+              padding: '11px 20px', borderRadius: 10,
+              border: '1px solid var(--color-sand)', background: 'transparent',
+              fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--color-walnut)', cursor: 'pointer',
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/* ─── Página principal ───────────────────────────────────────────────── */
+export default function Organizador() {
+  const [eventos, setEventos]         = useState([]);
+  const [carregando, setCarregando]   = useState(true);
+  const [modalAberto, setModalAberto] = useState(false);
+
+  useEffect(() => {
+    api.get('/eventos/meus')
+      .then(({ data }) => setEventos(data ?? []))
+      .catch(() => {})
+      .finally(() => setCarregando(false));
+  }, []);
+
+  function handleSalvo(novoEvento) {
+    setEventos(evs => [novoEvento, ...evs]);
+  }
+
+  /* Estatísticas rápidas */
+  const total    = eventos.length;
+  const aprovados = eventos.filter(e => e.status === 'APROVADO').length;
+  const pendentes = eventos.filter(e => e.status === 'PENDENTE').length;
+  const totalVendidos = eventos.reduce((acc, e) => acc + (e.ingressosVendidos ?? 0), 0);
+
+  return (
+    <div className="flex min-h-screen bg-cream">
+      <Sidebar />
+
+      <main className="flex-1 ml-[72px] py-6 md:py-8 px-4 md:px-8 page-enter">
+        <div className="max-w-5xl mx-auto w-full">
+
+          {/* Cabeçalho */}
+          <header className="flex items-start justify-between mb-8 gap-4">
+            <div>
+              <h1 className="font-display font-semibold text-3xl text-espresso">Meus Eventos</h1>
+              <p className="font-body text-sm text-walnut mt-1">Gerencie os eventos que você organiza</p>
+            </div>
+            <button
+              onClick={() => setModalAberto(true)}
+              className="flex items-center gap-2 shrink-0"
+              style={{
+                padding: '10px 20px', borderRadius: 12, border: 'none',
+                background: 'var(--color-bark)', color: 'var(--color-cream)',
+                fontFamily: 'var(--font-body)', fontSize: 14, fontWeight: 500, cursor: 'pointer',
+              }}
+            >
+              <Plus size={16} />
+              Criar evento
+            </button>
+          </header>
+
+          {/* Cards de métricas */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            {[
+              { label: 'Total de eventos',     valor: total,         icone: CalendarDays, cor: 'text-stone' },
+              { label: 'Aprovados',            valor: aprovados,     icone: CheckCircle,  cor: 'text-green-600' },
+              { label: 'Aguardando aprovação', valor: pendentes,     icone: Clock,        cor: 'text-amber-500' },
+              { label: 'Ingressos vendidos',   valor: totalVendidos, icone: Users,        cor: 'text-bark' },
+            ].map(({ label, valor, icone: Icone, cor }) => (
+              <div key={label} className="bg-sand rounded-2xl p-4">
+                <Icone size={18} className={`${cor} mb-2`} />
+                <p className="font-display font-bold text-2xl text-espresso">{carregando ? '—' : valor}</p>
+                <p className="font-body text-xs text-walnut mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabela de eventos */}
+          {carregando ? (
+            <div className="space-y-3">
+              {[1,2,3].map(i => (
+                <div key={i} className="bg-sand rounded-2xl h-16 animate-pulse" />
+              ))}
+            </div>
+          ) : eventos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-20 bg-sand rounded-2xl">
+              <CalendarDays size={36} className="text-walnut" />
+              <p className="font-body text-walnut">Você ainda não criou nenhum evento.</p>
+              <button
+                onClick={() => setModalAberto(true)}
+                className="font-body text-sm text-stone hover:underline"
+              >
+                Criar primeiro evento
+              </button>
+            </div>
+          ) : (
+            <div className="bg-sand rounded-2xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-cream">
+                    <th className="text-left p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Evento</th>
+                    <th className="text-left p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide hidden md:table-cell">Data</th>
+                    <th className="text-center p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide hidden sm:table-cell">Vagas</th>
+                    <th className="text-center p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide hidden sm:table-cell">Vendidos</th>
+                    <th className="text-right p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {eventos.map((ev, i) => (
+                    <tr key={ev.id} className={i % 2 === 0 ? 'bg-sand' : 'bg-cream/40'}>
+                      <td className="p-4">
+                        <p className="font-body font-medium text-sm text-espresso truncate max-w-[200px]">{ev.titulo}</p>
+                        <p className="font-body text-xs text-walnut mt-0.5">{formatarPreco(ev.preco)}</p>
+                      </td>
+                      <td className="p-4 hidden md:table-cell">
+                        <p className="font-body text-sm text-espresso">{formatarData(ev.data)}</p>
+                      </td>
+                      <td className="p-4 text-center hidden sm:table-cell">
+                        <p className="font-body text-sm text-espresso">{ev.vagasTotais ?? '—'}</p>
+                      </td>
+                      <td className="p-4 text-center hidden sm:table-cell">
+                        <p className="font-body text-sm font-medium text-stone">{ev.ingressosVendidos ?? 0}</p>
+                      </td>
+                      <td className="p-4 text-right">
+                        <BadgeEvento status={ev.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Aviso sobre aprovação */}
+          {pendentes > 0 && (
+            <div className="mt-4 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <Clock size={16} className="text-amber-600 mt-0.5 shrink-0" />
+              <p className="font-body text-sm text-amber-700">
+                {pendentes} evento(s) aguardando aprovação do administrador. Você será notificado quando aprovado.
+              </p>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      <ModalEvento
+        aberto={modalAberto}
+        onFechar={() => setModalAberto(false)}
+        onSalvo={handleSalvo}
+      />
+    </div>
+  );
+}

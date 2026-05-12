@@ -363,7 +363,7 @@ export default function Pontos() {
     return (
       <div className="flex min-h-screen bg-cream">
         <Sidebar />
-        <main className="flex-1 flex items-center justify-center ml-0 md:ml-64">
+        <main className="flex-1 flex items-center justify-center ml-[72px]">
           <div className="w-8 h-8 border-2 border-stone border-t-transparent rounded-full animate-spin" />
         </main>
       </div>
@@ -374,7 +374,8 @@ export default function Pontos() {
     <div className="flex min-h-screen bg-cream">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8 ml-0 md:ml-64 max-w-4xl">
+      <main className="flex-1 ml-[72px] py-6 md:py-8 px-4 md:px-8 page-enter">
+        <div className="max-w-5xl mx-auto w-full">
         {/* Cabeçalho */}
         <div className="mb-6">
           <h1 className="font-display font-bold text-3xl text-espresso">Pontos e Desafios</h1>
@@ -407,6 +408,7 @@ export default function Pontos() {
 
         {/* Ranking */}
         <SecaoRanking ranking={ranking} />
+        </div>
       </main>
 
       <ModalCupom cupom={cupomGerado} onClose={() => setCupomGerado(null)} />

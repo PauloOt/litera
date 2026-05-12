@@ -13,6 +13,8 @@ import MeusIngressos from './pages/MeusIngressos';
 import Pontos from './pages/Pontos';
 import Perfil from './pages/Perfil';
 import Planos from './pages/Planos';
+import Organizador from './pages/Organizador';
+import Admin from './pages/Admin';
 
 const Placeholder = ({ nome }) => (
   <div className="flex items-center justify-center h-screen">
@@ -42,12 +44,12 @@ export default function App() {
       {/* Admin / Organizador */}
       <Route path="/admin" element={
         <RoleRoute roles={['ROLE_ADMIN']}>
-          <Placeholder nome="Admin" />
+          <Admin />
         </RoleRoute>
       } />
       <Route path="/organizador" element={
         <RoleRoute roles={['ROLE_ORGANIZADOR', 'ROLE_ADMIN']}>
-          <Placeholder nome="Organizador" />
+          <Organizador />
         </RoleRoute>
       } />
 

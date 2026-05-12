@@ -245,7 +245,7 @@ export default function Planos() {
     <div className="flex min-h-screen bg-cream">
       <Sidebar />
 
-      <main className="flex-1 ml-[72px] py-6 md:py-10 px-4 md:px-8">
+      <main className="flex-1 ml-[72px] py-6 md:py-10 px-4 md:px-8 page-enter">
         <div className="max-w-5xl mx-auto w-full">
 
           {/* Cabeçalho */}
