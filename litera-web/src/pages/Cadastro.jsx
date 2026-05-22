@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, BookOpen } from 'lucide-react';
+import { Eye, EyeOff, BookOpen, CalendarDays, ArrowLeft } from 'lucide-react';
 import api from '../services/api';
 
 /* ─── SVG decorativo ─────────────────────────────────────────────────── */
@@ -71,8 +71,69 @@ function mascaraCPF(valor) {
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
 }
 
+/* ─── Card de seleção de perfil ──────────────────────────────────────── */
+function CardPerfil({ icon: Icon, titulo, descricao, selecionado, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 12,
+        padding: '24px 20px',
+        borderRadius: 16,
+        border: selecionado
+          ? '2px solid var(--color-bark)'
+          : '2px solid var(--color-sand)',
+        backgroundColor: selecionado ? 'rgba(192,133,82,0.08)' : '#fff',
+        cursor: 'pointer',
+        transition: 'all 0.15s',
+        flex: 1,
+        textAlign: 'center',
+      }}
+    >
+      <div style={{
+        width: 48,
+        height: 48,
+        borderRadius: '50%',
+        backgroundColor: selecionado ? 'var(--color-bark)' : 'var(--color-sand)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background-color 0.15s',
+      }}>
+        <Icon size={22} color={selecionado ? '#fff' : 'var(--color-bark)'} />
+      </div>
+      <div>
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 14,
+          fontWeight: 600,
+          color: 'var(--color-espresso)',
+          marginBottom: 4,
+        }}>
+          {titulo}
+        </p>
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: 12,
+          color: 'var(--color-walnut)',
+          lineHeight: 1.4,
+        }}>
+          {descricao}
+        </p>
+      </div>
+    </button>
+  );
+}
+
 export default function Cadastro() {
   const navigate = useNavigate();
+
+  const [step, setStep] = useState(1); // 1 = seleção de perfil, 2 = formulário
+  const [perfil, setPerfil] = useState('ROLE_USUARIO');
 
   const [form, setForm] = useState({
     nomeCompleto: '',
@@ -138,16 +199,16 @@ export default function Cadastro() {
         cpf: form.cpf.replace(/\D/g, ''),
         email: form.email,
         senha: form.senha,
-      });
+        perfil,
+      }, { _silencioso: true });
       navigate('/login', { state: { success: 'Conta criada! Faça login para continuar.' } });
     } catch (err) {
-      const msg = err.response?.data?.message ?? '';
-      if (err.response?.status === 409) {
-        if (msg.toLowerCase().includes('cpf')) {
-          setGlobal('Este CPF já está cadastrado');
-        } else {
-          setGlobal('Este e-mail já está em uso');
-        }
+      const msg = err.response?.data?.erro ?? err.response?.data ?? '';
+      const msgStr = typeof msg === 'string' ? msg.toLowerCase() : '';
+      if (msgStr.includes('cpf')) {
+        setGlobal('Este CPF já está cadastrado');
+      } else if (msgStr.includes('email') || msgStr.includes('e-mail')) {
+        setGlobal('Este e-mail já está em uso');
       } else {
         setGlobal('Erro ao criar conta. Tente novamente.');
       }
@@ -239,7 +300,7 @@ export default function Cadastro() {
         </div>
       </div>
 
-      {/* ── Painel direito (formulário) ── */}
+      {/* ── Painel direito ── */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -250,211 +311,318 @@ export default function Cadastro() {
       }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
 
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 30,
-            fontWeight: 600,
-            color: 'var(--color-espresso)',
-            marginBottom: 4,
-          }}>
-            Criar sua conta
-          </h1>
-          <p style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 14,
-            color: 'var(--color-walnut)',
-            marginBottom: 32,
-          }}>
-            É gratuito para sempre
-          </p>
-
-          {/* Erro global */}
-          {globalError && (
-            <div style={{
-              marginBottom: 20,
-              padding: '12px 16px',
-              borderRadius: 12,
-              border: '1px solid #fecaca',
-              backgroundColor: '#fef2f2',
-            }}>
-              <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#dc2626' }}>
-                {globalError}
-              </p>
-            </div>
-          )}
-
-          <form
-            onSubmit={handleSubmit}
-            noValidate
-            style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
-          >
-            {/* Nome */}
-            <Campo label="Nome completo" id="nomeCompleto" error={errors.nomeCompleto}>
-              <input
-                id="nomeCompleto"
-                name="nomeCompleto"
-                type="text"
-                autoComplete="name"
-                value={form.nomeCompleto}
-                onChange={handleChange}
-                placeholder="Seu nome completo"
-                style={errors.nomeCompleto ? inputError : inputBase}
-                {...makeInputHandlers('nomeCompleto')}
-              />
-            </Campo>
-
-            {/* CPF */}
-            <Campo label="CPF" id="cpf" error={errors.cpf}>
-              <input
-                id="cpf"
-                name="cpf"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                value={form.cpf}
-                onChange={handleChange}
-                placeholder="000.000.000-00"
-                maxLength={14}
-                style={errors.cpf ? inputError : inputBase}
-                {...makeInputHandlers('cpf')}
-              />
-            </Campo>
-
-            {/* E-mail */}
-            <Campo label="E-mail" id="email" error={errors.email}>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="seu@email.com"
-                style={errors.email ? inputError : inputBase}
-                {...makeInputHandlers('email')}
-              />
-            </Campo>
-
-            {/* Senha */}
-            <Campo label="Senha" id="senha" error={errors.senha}>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="senha"
-                  name="senha"
-                  type={showSenha ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={form.senha}
-                  onChange={handleChange}
-                  placeholder="Mínimo 8 caracteres"
-                  style={{ ...(errors.senha ? inputError : inputBase), paddingRight: 44 }}
-                  {...makeInputHandlers('senha')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSenha(s => !s)}
-                  tabIndex={-1}
-                  aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                  style={{
-                    position: 'absolute',
-                    right: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--color-walnut)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 4,
-                  }}
-                >
-                  {showSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </Campo>
-
-            {/* Confirmar senha */}
-            <Campo label="Confirmar senha" id="confirmarSenha" error={errors.confirmarSenha}>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="confirmarSenha"
-                  name="confirmarSenha"
-                  type={showConfirmar ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={form.confirmarSenha}
-                  onChange={handleChange}
-                  placeholder="Repita a senha"
-                  style={{ ...(errors.confirmarSenha ? inputError : inputBase), paddingRight: 44 }}
-                  {...makeInputHandlers('confirmarSenha')}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmar(s => !s)}
-                  tabIndex={-1}
-                  aria-label={showConfirmar ? 'Ocultar senha' : 'Mostrar senha'}
-                  style={{
-                    position: 'absolute',
-                    right: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: 'var(--color-walnut)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 4,
-                  }}
-                >
-                  {showConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </Campo>
-
-            {/* Botão */}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                marginTop: 8,
-                width: '100%',
-                padding: '13px 0',
-                borderRadius: 12,
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                background: 'var(--color-bark)',
-                color: 'var(--color-cream)',
+          {/* ── STEP 1: Seleção de perfil ── */}
+          {step === 1 && (
+            <>
+              <h1 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 30,
+                fontWeight: 600,
+                color: 'var(--color-espresso)',
+                marginBottom: 4,
+              }}>
+                Como você quer usar o Litera?
+              </h1>
+              <p style={{
                 fontFamily: 'var(--font-body)',
                 fontSize: 14,
-                fontWeight: 500,
-                letterSpacing: '0.01em',
-                opacity: loading ? 0.65 : 1,
-                transition: 'opacity 0.15s',
-              }}
-            >
-              {loading ? 'Criando conta…' : 'Criar conta'}
-            </button>
-          </form>
+                color: 'var(--color-walnut)',
+                marginBottom: 32,
+              }}>
+                Você pode mudar isso depois no seu perfil
+              </p>
 
-          <p style={{
-            marginTop: 24,
-            textAlign: 'center',
-            fontFamily: 'var(--font-body)',
-            fontSize: 14,
-            color: 'var(--color-walnut)',
-          }}>
-            Já tem conta?{' '}
-            <Link
-              to="/login"
-              style={{
-                fontWeight: 500,
-                color: 'var(--color-stone)',
-                textDecoration: 'underline',
-              }}
-            >
-              Entrar
-            </Link>
-          </p>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
+                <CardPerfil
+                  icon={BookOpen}
+                  titulo="Leitor"
+                  descricao="Acesse empréstimos, eventos e ganhe pontos"
+                  selecionado={perfil === 'ROLE_USUARIO'}
+                  onClick={() => setPerfil('ROLE_USUARIO')}
+                />
+                <CardPerfil
+                  icon={CalendarDays}
+                  titulo="Organizador"
+                  descricao="Crie e gerencie eventos + todos os benefícios de leitor"
+                  selecionado={perfil === 'ROLE_ORGANIZADOR'}
+                  onClick={() => setPerfil('ROLE_ORGANIZADOR')}
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                style={{
+                  width: '100%',
+                  padding: '13px 0',
+                  borderRadius: 12,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: 'var(--color-bark)',
+                  color: 'var(--color-cream)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  letterSpacing: '0.01em',
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                Continuar
+              </button>
+
+              <p style={{
+                marginTop: 24,
+                textAlign: 'center',
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                color: 'var(--color-walnut)',
+              }}>
+                Já tem conta?{' '}
+                <Link
+                  to="/login"
+                  style={{
+                    fontWeight: 500,
+                    color: 'var(--color-stone)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Entrar
+                </Link>
+              </p>
+            </>
+          )}
+
+          {/* ── STEP 2: Formulário ── */}
+          {step === 2 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--color-walnut)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: 13,
+                  marginBottom: 20,
+                  padding: 0,
+                }}
+              >
+                <ArrowLeft size={16} />
+                Voltar
+              </button>
+
+              <h1 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 30,
+                fontWeight: 600,
+                color: 'var(--color-espresso)',
+                marginBottom: 4,
+              }}>
+                Criar sua conta
+              </h1>
+              <p style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                color: 'var(--color-walnut)',
+                marginBottom: 32,
+              }}>
+                {perfil === 'ROLE_ORGANIZADOR' ? 'Conta de Organizador de Eventos' : 'Conta de Leitor'}
+              </p>
+
+              {/* Erro global */}
+              {globalError && (
+                <div style={{
+                  marginBottom: 20,
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  border: '1px solid #fecaca',
+                  backgroundColor: '#fef2f2',
+                }}>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: '#dc2626' }}>
+                    {globalError}
+                  </p>
+                </div>
+              )}
+
+              <form
+                onSubmit={handleSubmit}
+                noValidate
+                style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+              >
+                {/* Nome */}
+                <Campo label="Nome completo" id="nomeCompleto" error={errors.nomeCompleto}>
+                  <input
+                    id="nomeCompleto"
+                    name="nomeCompleto"
+                    type="text"
+                    autoComplete="name"
+                    value={form.nomeCompleto}
+                    onChange={handleChange}
+                    placeholder="Seu nome completo"
+                    style={errors.nomeCompleto ? inputError : inputBase}
+                    {...makeInputHandlers('nomeCompleto')}
+                  />
+                </Campo>
+
+                {/* CPF */}
+                <Campo label="CPF" id="cpf" error={errors.cpf}>
+                  <input
+                    id="cpf"
+                    name="cpf"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    value={form.cpf}
+                    onChange={handleChange}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    style={errors.cpf ? inputError : inputBase}
+                    {...makeInputHandlers('cpf')}
+                  />
+                </Campo>
+
+                {/* E-mail */}
+                <Campo label="E-mail" id="email" error={errors.email}>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="seu@email.com"
+                    style={errors.email ? inputError : inputBase}
+                    {...makeInputHandlers('email')}
+                  />
+                </Campo>
+
+                {/* Senha */}
+                <Campo label="Senha" id="senha" error={errors.senha}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="senha"
+                      name="senha"
+                      type={showSenha ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      value={form.senha}
+                      onChange={handleChange}
+                      placeholder="Mínimo 8 caracteres"
+                      style={{ ...(errors.senha ? inputError : inputBase), paddingRight: 44 }}
+                      {...makeInputHandlers('senha')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSenha(s => !s)}
+                      tabIndex={-1}
+                      aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--color-walnut)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: 4,
+                      }}
+                    >
+                      {showSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </Campo>
+
+                {/* Confirmar senha */}
+                <Campo label="Confirmar senha" id="confirmarSenha" error={errors.confirmarSenha}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="confirmarSenha"
+                      name="confirmarSenha"
+                      type={showConfirmar ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      value={form.confirmarSenha}
+                      onChange={handleChange}
+                      placeholder="Repita a senha"
+                      style={{ ...(errors.confirmarSenha ? inputError : inputBase), paddingRight: 44 }}
+                      {...makeInputHandlers('confirmarSenha')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmar(s => !s)}
+                      tabIndex={-1}
+                      aria-label={showConfirmar ? 'Ocultar senha' : 'Mostrar senha'}
+                      style={{
+                        position: 'absolute',
+                        right: 12,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--color-walnut)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: 4,
+                      }}
+                    >
+                      {showConfirmar ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </Campo>
+
+                {/* Botão */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    marginTop: 8,
+                    width: '100%',
+                    padding: '13px 0',
+                    borderRadius: 12,
+                    border: 'none',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    background: 'var(--color-bark)',
+                    color: 'var(--color-cream)',
+                    fontFamily: 'var(--font-body)',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    letterSpacing: '0.01em',
+                    opacity: loading ? 0.65 : 1,
+                    transition: 'opacity 0.15s',
+                  }}
+                >
+                  {loading ? 'Criando conta…' : 'Criar conta'}
+                </button>
+              </form>
+
+              <p style={{
+                marginTop: 24,
+                textAlign: 'center',
+                fontFamily: 'var(--font-body)',
+                fontSize: 14,
+                color: 'var(--color-walnut)',
+              }}>
+                Já tem conta?{' '}
+                <Link
+                  to="/login"
+                  style={{
+                    fontWeight: 500,
+                    color: 'var(--color-stone)',
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Entrar
+                </Link>
+              </p>
+            </>
+          )}
 
         </div>
       </div>

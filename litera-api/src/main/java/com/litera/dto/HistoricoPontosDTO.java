@@ -9,8 +9,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HistoricoPontosDTO {
 
+    private Long id;
     private String acao;
-    private Integer pontosQuantidade;
-    private Float multiplicadorAplicado;
-    private LocalDateTime dataRegistro;
+    private Integer pontosFinais;
+    private Float multiplicador;
+    private LocalDateTime data;
 }

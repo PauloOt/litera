@@ -27,18 +27,33 @@ function formatarPreco(preco) {
 function ModalCompra({ evento, onClose }) {
   const navigate = useNavigate();
   const [cupom, setCupom] = useState('');
+  const [cupomStatus, setCupomStatus] = useState(null); // null | 'validando' | { valido, percentualDesconto }
   const [comprando, setComprando] = useState(false);
   const [erro, setErro] = useState('');
+
+  async function validarCupom(codigo) {
+    if (!codigo.trim()) { setCupomStatus(null); return; }
+    setCupomStatus('validando');
+    try {
+      const res = await api.get(`/pontos/cupom/${codigo.trim()}`, { _silencioso: true });
+      setCupomStatus(res.data);
+    } catch {
+      setCupomStatus({ valido: false, percentualDesconto: null });
+    }
+  }
 
   async function handleComprar() {
     setComprando(true);
     setErro('');
     try {
-      const body = cupom.trim() ? { codigoCupom: cupom.trim() } : {};
-      const res = await api.post(`/eventos/${evento.id}/comprar`, body);
-      window.location.href = res.data.checkoutUrl;
+      const body = { eventoId: evento.id };
+      if (cupom.trim()) body.codigoCupom = cupom.trim();
+      const res = await api.post('/pagamentos/ingresso', body, { _silencioso: true });
+      window.location.href = res.data.url;
     } catch (err) {
-      setErro(err.response?.data?.mensagem ?? 'Erro ao processar compra. Tente novamente.');
+      const data = err.response?.data;
+      const msg = data?.erro ?? (typeof data === 'string' ? data : 'Erro ao processar compra. Tente novamente.');
+      setErro(typeof msg === 'string' ? msg : 'Erro ao processar compra. Tente novamente.');
       setComprando(false);
     }
   }
@@ -79,10 +94,26 @@ function ModalCompra({ evento, onClose }) {
           <label className="font-body text-sm text-walnut block mb-1">Cupom de pontos (opcional)</label>
           <input
             value={cupom}
-            onChange={e => setCupom(e.target.value)}
+            onChange={e => { setCupom(e.target.value); setCupomStatus(null); }}
+            onBlur={() => validarCupom(cupom)}
             placeholder="Ex: LITERA-ABC123"
-            className="w-full border border-sand rounded-lg px-3 py-2 font-body text-sm text-espresso bg-cream focus:outline-none focus:ring-2 focus:ring-stone"
+            className={`w-full border rounded-lg px-3 py-2 font-body text-sm text-espresso bg-cream focus:outline-none focus:ring-2 focus:ring-stone ${
+              cupomStatus && cupomStatus !== 'validando'
+                ? cupomStatus.valido ? 'border-green-400' : 'border-red-400'
+                : 'border-sand'
+            }`}
           />
+          {cupomStatus === 'validando' && (
+            <p className="font-body text-xs text-walnut mt-1">Validando cupom...</p>
+          )}
+          {cupomStatus && cupomStatus !== 'validando' && cupomStatus.valido && (
+            <p className="font-body text-xs text-green-700 mt-1">
+              Cupom válido — {cupomStatus.percentualDesconto}% de desconto
+            </p>
+          )}
+          {cupomStatus && cupomStatus !== 'validando' && !cupomStatus.valido && (
+            <p className="font-body text-xs text-red-600 mt-1">Cupom inválido ou já utilizado</p>
+          )}
         </div>
 
         <p className="font-body text-xs text-walnut bg-stone/10 rounded-lg px-3 py-2">

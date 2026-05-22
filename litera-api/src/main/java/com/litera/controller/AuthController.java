@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 
-@RestController
+@RestController 
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
@@ -62,7 +62,8 @@ public class AuthController {
         usuario.setCpf(dto.getCpf());
         usuario.setEmail(dto.getEmail());
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
-        usuario.setPerfil(Perfil.ROLE_USUARIO);
+        Perfil perfil = "ROLE_ORGANIZADOR".equals(dto.getPerfil()) ? Perfil.ROLE_ORGANIZADOR : Perfil.ROLE_USUARIO;
+        usuario.setPerfil(perfil);
         usuario.setDataCadastro(LocalDateTime.now());
         usuarioRepository.save(usuario);
 
@@ -90,9 +91,8 @@ public class AuthController {
             );
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String token = jwtUtil.gerarToken(userDetails.getUsername());
-
             Usuario usuario = usuarioRepository.findByEmail(dto.getEmail()).orElseThrow();
+            String token = jwtUtil.gerarToken(userDetails.getUsername(), usuario.getPerfil().name());
 
             return ResponseEntity.ok(new LoginResponseDTO(
                     token,

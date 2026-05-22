@@ -11,5 +11,7 @@ public interface IngressoRepository extends JpaRepository<Ingresso, Long> {
 
     List<Ingresso> findByUsuarioId(Long usuarioId);
 
+    List<Ingresso> findByEventoId(Long eventoId);
+
     boolean existsByUsuarioIdAndEventoId(Long usuarioId, Long eventoId);
 }

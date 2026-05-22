@@ -27,8 +27,24 @@ public class Usuario {
     @Column(nullable = false, length = 100)
     private String senha;
 
-    @Column(name = "foto_url", length = 255)
+    @Column(name = "foto_url", columnDefinition = "MEDIUMTEXT")
     private String fotoUrl;
+
+    @Column(name = "bio", length = 300)
+    private String bio;
+
+    @Column(name = "instagram_url", length = 100)
+    private String instagramUrl;
+
+    @Column(name = "x_url", length = 100)
+    private String xUrl;
+
+    @Column(name = "goodreads_url", length = 100)
+    private String goodreadsUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "livro_destaque_id")
+    private Livro livroDestaque;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { BookLoader } from '../components/BookLoader';
 import api from '../services/api';
 
 /* ─── SVG decorativo ─────────────────────────────────────────────────── */
@@ -55,6 +56,7 @@ export default function Login() {
   const [globalError, setGlobal]  = useState('');
   const [showSenha, setShowSenha] = useState(false);
   const [loading, setLoading]     = useState(false);
+  const [animating, setAnimating] = useState(false);
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -80,9 +82,10 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', { email: form.email, senha: form.senha });
-      login(data.token, data.usuario ?? null);
-      navigate('/dashboard', { replace: true });
+      const { data } = await api.post('/auth/login', { email: form.email, senha: form.senha }, { _silencioso: true });
+      login(data.token, { email: data.email, nome: data.nome, perfil: data.perfil });
+      setAnimating(true);
+      setTimeout(() => navigate('/dashboard', { replace: true }), 2500);
     } catch (err) {
       if (err.response?.status === 401) {
         setGlobal('E-mail ou senha incorretos');
@@ -114,56 +117,89 @@ export default function Login() {
     boxShadow: '0 0 0 3px rgba(192,133,82,0.2)',
   };
 
+  if (animating) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: 'var(--color-cream)',
+        animation: 'fadeIn 0.4s ease',
+      }}>
+        <BookLoader texto="Preparando sua estante..." />
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
 
-      {/* ── Painel esquerdo (decorativo) ── */}
+      {/* ── Painel esquerdo (decorativo / animado) ── */}
       <div
         className="hidden md:flex"
         style={{
+          position: 'relative',
           width: '45%',
           flexShrink: 0,
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: 32,
-          padding: '40px',
+          justifyContent: 'flex-start',
+          /* paddingTop fixo — centraliza o L visualmente na tela */
+          paddingTop: 'calc(50vh - 24px)',
           background: 'var(--color-espresso)',
+          overflow: 'hidden',
         }}
       >
-        <div style={{ textAlign: 'center' }}>
+        {/* L — logo decorativa */}
+        <div style={{ textAlign: 'center', userSelect: 'none', flexShrink: 0 }}>
           <p style={{
             fontFamily: 'var(--font-display)',
             fontSize: 48,
             fontWeight: 700,
             color: 'var(--color-cream)',
             letterSpacing: '0.05em',
-            userSelect: 'none',
+            whiteSpace: 'nowrap',
+            lineHeight: 1,
+            margin: 0,
           }}>
             Litera
           </p>
+        </div>
+
+        {/* Conteúdo decorativo — absoluto, some logo */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 24,
+          padding: '40px',
+          paddingTop: '120px',
+          pointerEvents: 'none',
+        }}>
           <p style={{
             fontFamily: 'var(--font-body)',
             fontSize: 13,
             fontWeight: 300,
             color: 'var(--color-walnut)',
-            marginTop: 8,
           }}>
             Sua jornada literária começa aqui
           </p>
-        </div>
-
-        <DecoSVG />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BookOpen size={16} style={{ color: 'var(--color-stone)' }} />
-          <span style={{
-            fontFamily: 'var(--font-body)',
-            fontSize: 12,
-            color: 'var(--color-walnut)',
-          }}>
-            Gerencie leituras, eventos e pontos em um só lugar
-          </span>
+          <DecoSVG />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BookOpen size={16} style={{ color: 'var(--color-stone)' }} />
+            <span style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: 12,
+              color: 'var(--color-walnut)',
+            }}>
+              Gerencie leituras, eventos e pontos em um só lugar
+            </span>
+          </div>
         </div>
       </div>
 

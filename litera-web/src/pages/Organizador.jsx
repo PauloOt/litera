@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, CalendarDays, Users, Clock, CheckCircle, XCircle, Pencil } from 'lucide-react';
+import { Plus, CalendarDays, Users, Clock, CheckCircle, XCircle, Pencil, Trash2, Eye } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { Modal } from '../components/Modal';
 import api from '../services/api';
@@ -59,10 +59,26 @@ function Campo({ label, children }) {
 /* ─── Modal criar/editar evento ──────────────────────────────────────── */
 const FORM_VAZIO = { titulo: '', descricao: '', local: '', data: '', preco: '', vagas: '', capa: '' };
 
-function ModalEvento({ aberto, onFechar, onSalvo }) {
+function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
   const [form, setForm]       = useState(FORM_VAZIO);
   const [erro, setErro]       = useState('');
   const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (eventoEdit) {
+      setForm({
+        titulo: eventoEdit.titulo || '',
+        descricao: eventoEdit.descricao || '',
+        local: eventoEdit.local || '',
+        data: eventoEdit.dataHora ? eventoEdit.dataHora.slice(0, 16) : '',
+        preco: eventoEdit.preco ?? '',
+        vagas: eventoEdit.vagasTotais ?? '',
+        capa: eventoEdit.capa || '',
+      });
+    } else {
+      setForm(FORM_VAZIO);
+    }
+  }, [eventoEdit]);
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -81,17 +97,22 @@ function ModalEvento({ aberto, onFechar, onSalvo }) {
         titulo: form.titulo,
         descricao: form.descricao,
         local: form.local,
-        data: form.data,
+        dataHora: form.data ? form.data + ':00' : null,
         preco: Number(form.preco) || 0,
         vagasTotais: Number(form.vagas) || 0,
         capa: form.capa || null,
       };
-      const { data } = await api.post('/eventos', payload);
-      onSalvo(data);
+      if (eventoEdit) {
+        const { data } = await api.put(`/eventos/${eventoEdit.id}`, payload);
+        onSalvo(data, true);
+      } else {
+        const { data } = await api.post('/eventos', payload);
+        onSalvo(data, false);
+      }
       setForm(FORM_VAZIO);
       onFechar();
     } catch {
-      setErro('Erro ao criar evento. Tente novamente.');
+      setErro(eventoEdit ? 'Erro ao editar evento.' : 'Erro ao criar evento. Tente novamente.');
     } finally {
       setSalvando(false);
     }
@@ -104,7 +125,7 @@ function ModalEvento({ aberto, onFechar, onSalvo }) {
   }
 
   return (
-    <Modal isOpen={aberto} onClose={handleFechar} title="Criar novo evento">
+    <Modal isOpen={aberto} onClose={handleFechar} title={eventoEdit ? 'Editar evento' : 'Criar novo evento'}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Campo label="Título *">
           <input name="titulo" value={form.titulo} onChange={handleChange} style={inputCls} placeholder="Nome do evento" />
@@ -148,7 +169,7 @@ function ModalEvento({ aberto, onFechar, onSalvo }) {
               cursor: salvando ? 'not-allowed' : 'pointer', opacity: salvando ? 0.65 : 1,
             }}
           >
-            {salvando ? 'Criando…' : 'Criar evento'}
+            {salvando ? (eventoEdit ? 'Salvando…' : 'Criando…') : (eventoEdit ? 'Salvar alterações' : 'Criar evento')}
           </button>
           <button
             type="button" onClick={handleFechar}
@@ -166,21 +187,119 @@ function ModalEvento({ aberto, onFechar, onSalvo }) {
   );
 }
 
+/* ─── Modal participantes ───────────────────────────────────────────── */
+function ModalParticipantes({ evento, onClose }) {
+  const [participantes, setParticipantes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [checkinLoading, setCheckinLoading] = useState(null);
+
+  useEffect(() => {
+    if (!evento) return;
+    setCarregando(true);
+    api.get(`/eventos/${evento.id}/participantes`)
+      .then(({ data }) => setParticipantes(data ?? []))
+      .catch(() => {})
+      .finally(() => setCarregando(false));
+  }, [evento]);
+
+  async function handleCheckin(ingressoId) {
+    setCheckinLoading(ingressoId);
+    try {
+      await api.put(`/ingressos/${ingressoId}/checkin`);
+      setParticipantes(prev =>
+        prev.map(p => p.ingressoId === ingressoId ? { ...p, checkInRealizado: true } : p)
+      );
+    } catch (err) {
+      // Toast global exibe a mensagem
+    } finally {
+      setCheckinLoading(null);
+    }
+  }
+
+  return (
+    <Modal isOpen={!!evento} onClose={onClose} title={`Participantes — ${evento?.titulo ?? ''}`}>
+      {carregando ? (
+        <div className="flex justify-center py-8">
+          <div className="w-6 h-6 border-2 border-stone border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : participantes.length === 0 ? (
+        <p className="font-body text-sm text-walnut text-center py-6">Nenhum participante ainda.</p>
+      ) : (
+        <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
+          <p className="font-body text-xs text-walnut mb-2">{participantes.length} participante(s)</p>
+          {participantes.map(p => (
+            <div key={p.ingressoId} className="flex items-center justify-between bg-sand rounded-xl px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-body font-medium text-sm text-espresso truncate">{p.nomeComprador}</p>
+                <p className="font-body text-xs text-walnut">
+                  Código: <span className="font-mono tracking-wide">{p.codigoIngresso}</span>
+                  {p.valorPago != null && <> · {formatarPreco(p.valorPago)}</>}
+                </p>
+              </div>
+              <div className="shrink-0 ml-3">
+                {p.checkInRealizado ? (
+                  <span className="flex items-center gap-1 font-body text-xs text-green-700 bg-green-100 px-2.5 py-1 rounded-full">
+                    <CheckCircle size={12} /> Check-in
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => handleCheckin(p.ingressoId)}
+                    disabled={checkinLoading === p.ingressoId}
+                    className="font-body text-xs text-cream bg-stone px-3 py-1.5 rounded-lg hover:brightness-90 transition-all disabled:opacity-60"
+                  >
+                    {checkinLoading === p.ingressoId ? '...' : 'Fazer check-in'}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
 /* ─── Página principal ───────────────────────────────────────────────── */
 export default function Organizador() {
   const [eventos, setEventos]         = useState([]);
   const [carregando, setCarregando]   = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  const [eventoEdit, setEventoEdit]   = useState(null);
+  const [eventoParticipantes, setEventoParticipantes] = useState(null);
 
   useEffect(() => {
-    api.get('/eventos/meus')
+    api.get('/organizador/eventos')
       .then(({ data }) => setEventos(data ?? []))
       .catch(() => {})
       .finally(() => setCarregando(false));
   }, []);
 
-  function handleSalvo(novoEvento) {
-    setEventos(evs => [novoEvento, ...evs]);
+  function handleSalvo(eventoData, isEdit) {
+    if (isEdit) {
+      setEventos(evs => evs.map(e => e.id === eventoData.id ? eventoData : e));
+    } else {
+      setEventos(evs => [eventoData, ...evs]);
+    }
+  }
+
+  function handleEditar(ev) {
+    setEventoEdit(ev);
+    setModalAberto(true);
+  }
+
+  function handleFecharModal() {
+    setModalAberto(false);
+    setEventoEdit(null);
+  }
+
+  async function handleCancelar(ev) {
+    if (!confirm(`Tem certeza que deseja cancelar o evento "${ev.titulo}"?`)) return;
+    try {
+      await api.delete(`/eventos/${ev.id}`);
+      setEventos(evs => evs.map(e => e.id === ev.id ? { ...e, status: 'CANCELADO' } : e));
+    } catch (err) {
+      // Toast global exibe a mensagem
+    }
   }
 
   /* Estatísticas rápidas */
@@ -203,7 +322,7 @@ export default function Organizador() {
               <p className="font-body text-sm text-walnut mt-1">Gerencie os eventos que você organiza</p>
             </div>
             <button
-              onClick={() => setModalAberto(true)}
+              onClick={() => { setEventoEdit(null); setModalAberto(true); }}
               className="flex items-center gap-2 shrink-0"
               style={{
                 padding: '10px 20px', borderRadius: 12, border: 'none',
@@ -259,7 +378,8 @@ export default function Organizador() {
                     <th className="text-left p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide hidden md:table-cell">Data</th>
                     <th className="text-center p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide hidden sm:table-cell">Vagas</th>
                     <th className="text-center p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide hidden sm:table-cell">Vendidos</th>
-                    <th className="text-right p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Status</th>
+                    <th className="text-center p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Status</th>
+                    <th className="text-right p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -270,7 +390,7 @@ export default function Organizador() {
                         <p className="font-body text-xs text-walnut mt-0.5">{formatarPreco(ev.preco)}</p>
                       </td>
                       <td className="p-4 hidden md:table-cell">
-                        <p className="font-body text-sm text-espresso">{formatarData(ev.data)}</p>
+                        <p className="font-body text-sm text-espresso">{formatarData(ev.dataHora ?? ev.data)}</p>
                       </td>
                       <td className="p-4 text-center hidden sm:table-cell">
                         <p className="font-body text-sm text-espresso">{ev.vagasTotais ?? '—'}</p>
@@ -278,8 +398,39 @@ export default function Organizador() {
                       <td className="p-4 text-center hidden sm:table-cell">
                         <p className="font-body text-sm font-medium text-stone">{ev.ingressosVendidos ?? 0}</p>
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-4 text-center">
                         <BadgeEvento status={ev.status} />
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {ev.status === 'APROVADO' && (
+                            <button
+                              onClick={() => setEventoParticipantes(ev)}
+                              className="p-1.5 rounded-lg hover:bg-cream transition-colors"
+                              title="Ver participantes"
+                            >
+                              <Eye size={15} className="text-stone" />
+                            </button>
+                          )}
+                          {ev.status === 'PENDENTE' && (
+                            <>
+                              <button
+                                onClick={() => handleEditar(ev)}
+                                className="p-1.5 rounded-lg hover:bg-cream transition-colors"
+                                title="Editar evento"
+                              >
+                                <Pencil size={15} className="text-walnut" />
+                              </button>
+                              <button
+                                onClick={() => handleCancelar(ev)}
+                                className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                title="Cancelar evento"
+                              >
+                                <Trash2 size={15} className="text-red-500" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -303,8 +454,14 @@ export default function Organizador() {
 
       <ModalEvento
         aberto={modalAberto}
-        onFechar={() => setModalAberto(false)}
+        onFechar={handleFecharModal}
         onSalvo={handleSalvo}
+        eventoEdit={eventoEdit}
+      />
+
+      <ModalParticipantes
+        evento={eventoParticipantes}
+        onClose={() => setEventoParticipantes(null)}
       />
     </div>
   );

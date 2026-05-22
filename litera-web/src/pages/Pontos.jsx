@@ -4,6 +4,7 @@ import { Sidebar } from '../components/Sidebar';
 import { BarraProgresso } from '../components/BarraProgresso';
 import { BadgePlano } from '../components/BadgePlano';
 import { Modal } from '../components/Modal';
+import { usePontos } from '../context/UserContext';
 import api from '../services/api';
 
 /* ─── Dados fixos de níveis ──────────────────────────────────────────── */
@@ -291,6 +292,41 @@ function SecaoRanking({ ranking }) {
   );
 }
 
+/* ─── Seção: Meus Cupons ────────────────────────────────────────────── */
+function SecaoCupons({ cupons }) {
+  if (cupons.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <h2 className="font-display font-semibold text-xl text-espresso mb-4">Meus Cupons</h2>
+      <div className="flex flex-col gap-2">
+        {cupons.map(c => (
+          <div
+            key={c.id}
+            className={`flex items-center justify-between rounded-xl px-4 py-3 ${
+              c.usado ? 'bg-sand/60 opacity-60' : 'bg-sand'
+            }`}
+          >
+            <div className="min-w-0">
+              <p className="font-display font-bold text-sm text-bark tracking-widest">{c.codigoCupom}</p>
+              <p className="font-body text-xs text-walnut">{c.percentualDesconto}% de desconto · {c.pontosCusto} pts</p>
+            </div>
+            <span
+              className={`shrink-0 font-body text-xs px-2 py-0.5 rounded-full ${
+                c.usado
+                  ? 'bg-walnut/20 text-walnut'
+                  : 'bg-green-100 text-green-800'
+              }`}
+            >
+              {c.usado ? 'Usado' : 'Ativo'}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /* ─── Modal cupom gerado ─────────────────────────────────────────────── */
 function ModalCupom({ cupom, onClose }) {
   return (
@@ -321,10 +357,12 @@ function ModalCupom({ cupom, onClose }) {
 
 /* ─── Página principal ───────────────────────────────────────────────── */
 export default function Pontos() {
+  const { refreshPontos } = usePontos();
   const [dados, setDados] = useState(null);
   const [historico, setHistorico] = useState([]);
   const [ranking, setRanking] = useState([]);
   const [desafios, setDesafios] = useState([]);
+  const [cupons, setCupons] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [tabelaAberta, setTabelaAberta] = useState(false);
   const [cupomGerado, setCupomGerado] = useState(null);
@@ -332,30 +370,41 @@ export default function Pontos() {
   useEffect(() => {
     async function carregar() {
       try {
-        const [resPontos, resHistorico, resRanking, resDesafios] = await Promise.allSettled([
+        const [resPontos, resHistorico, resRanking, resDesafios, resCupons] = await Promise.allSettled([
           api.get('/pontos'),
           api.get('/pontos/historico'),
           api.get('/pontos/ranking'),
           api.get('/desafios'),
+          api.get('/pontos/meus-cupons'),
         ]);
         if (resPontos.status === 'fulfilled') setDados(resPontos.value.data);
         if (resHistorico.status === 'fulfilled') setHistorico(resHistorico.value.data);
         if (resRanking.status === 'fulfilled') setRanking(resRanking.value.data);
         if (resDesafios.status === 'fulfilled') setDesafios(resDesafios.value.data);
+        if (resCupons.status === 'fulfilled') setCupons(resCupons.value.data);
+        await refreshPontos();
       } finally {
         setCarregando(false);
       }
     }
     carregar();
-  }, []);
+  }, [refreshPontos]);
 
   async function handleResgatar(opcao) {
     try {
       const res = await api.post('/pontos/resgatar/evento', { pontosResgatados: opcao.pontos });
       setCupomGerado(res.data);
       setDados(prev => prev ? { ...prev, saldo: res.data.saldoRestante } : prev);
-    } catch (err) {
-      alert(err.response?.data?.mensagem ?? 'Erro ao resgatar pontos.');
+      setCupons(prev => [{
+        id: Date.now(),
+        codigoCupom: res.data.codigoCupom,
+        percentualDesconto: res.data.percentualDesconto,
+        pontosCusto: res.data.pontosUtilizados,
+        usado: false,
+      }, ...prev]);
+      refreshPontos();
+    } catch {
+      // Toast global exibe a mensagem
     }
   }
 
@@ -402,6 +451,9 @@ export default function Pontos() {
         {dados && (
           <SecaoResgate saldo={dados.saldo} onResgatar={handleResgatar} />
         )}
+
+        {/* Meus Cupons */}
+        <SecaoCupons cupons={cupons} />
 
         {/* Histórico */}
         <SecaoHistorico historico={historico} />

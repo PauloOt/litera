@@ -2,6 +2,7 @@ package com.litera.controller;
 
 import com.litera.dto.AssinarRequestDTO;
 import com.litera.dto.CheckoutResponseDTO;
+import com.litera.dto.IngressoRequestDTO;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.PagamentoService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,26 @@ public class PagamentoController {
         Long usuarioId = getUsuarioId(userDetails);
         pagamentoService.cancelarAssinatura(usuarioId);
         return ResponseEntity.ok("Assinatura cancelada com sucesso");
+    }
+
+    @PostMapping("/ingresso")
+    public ResponseEntity<CheckoutResponseDTO> comprarIngresso(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody IngressoRequestDTO dto) {
+        Long usuarioId = getUsuarioId(userDetails);
+        String url = pagamentoService.criarSessaoIngresso(usuarioId, dto.getEventoId(), dto.getCodigoCupom());
+        // url == null significa evento gratuito (ingresso já criado)
+        String destino = url != null ? url : "http://localhost:5173/meus-ingressos";
+        return ResponseEntity.ok(new CheckoutResponseDTO(destino));
+    }
+
+    @PostMapping("/confirmar-ingresso")
+    public ResponseEntity<String> confirmarIngresso(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam String sessionId) {
+        Long usuarioId = getUsuarioId(userDetails);
+        pagamentoService.confirmarIngresso(usuarioId, sessionId);
+        return ResponseEntity.ok("Ingresso confirmado");
     }
 
     @PostMapping("/webhook")

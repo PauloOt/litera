@@ -4,6 +4,7 @@ import { Sidebar } from '../components/Sidebar';
 import { CardLivro } from '../components/CardLivro';
 import { BadgeStatus } from '../components/BadgeStatus';
 import { Modal } from '../components/Modal';
+import { usePontos } from '../context/UserContext';
 import api from '../services/api';
 
 /* ─── Utilitários de data ────────────────────────────────────────────── */
@@ -423,8 +424,9 @@ export default function Leituras() {
 
   useEffect(() => { carregarDados(); }, []);
 
+  const { refreshPontos } = usePontos();
   function handleSalvo() { setModalNova(false); carregarDados(); }
-  function handleDevolvido() { setLeituraDevolver(null); carregarDados(); }
+  function handleDevolvido() { setLeituraDevolver(null); carregarDados(); refreshPontos(); }
 
   return (
     <div className="flex min-h-screen bg-cream">

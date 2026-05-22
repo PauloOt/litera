@@ -29,6 +29,9 @@ public class Ingresso {
     @Column(name = "stripe_id", length = 100)
     private String stripeId;
 
+    @Column(name = "codigo_ingresso", length = 20)
+    private String codigoIngresso;
+
     @Column(name = "check_in_realizado")
     private Boolean checkInRealizado;
 

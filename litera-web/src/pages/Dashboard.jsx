@@ -7,6 +7,7 @@ import { CardLivro } from '../components/CardLivro';
 import { BarraProgresso } from '../components/BarraProgresso';
 import { BadgePlano } from '../components/BadgePlano';
 import { BadgeStatus } from '../components/BadgeStatus';
+import { usePontos } from '../context/UserContext';
 import api from '../services/api';
 
 /* ─── Utilitário de data ─────────────────────────────────────────────── */
@@ -173,8 +174,8 @@ function SecaoEventos({ eventos }) {
 
 /* ─── Dashboard (página principal) ──────────────────────────────────── */
 export default function Dashboard() {
+  const { pontos, refreshPontos } = usePontos();
   const [perfil,   setPerfil]   = useState(null);
-  const [pontos,   setPontos]   = useState(null);
   const [leituras, setLeituras] = useState([]);
   const [desafios, setDesafios] = useState([]);
   const [eventos,  setEventos]  = useState([]);
@@ -183,25 +184,24 @@ export default function Dashboard() {
   useEffect(() => {
     async function carregar() {
       try {
-        const [rPerfil, rPontos, rLeituras, rDesafios, rEventos] = await Promise.allSettled([
+        const [rPerfil, rLeituras, rDesafios, rEventos] = await Promise.allSettled([
           api.get('/perfil'),
-          api.get('/pontos'),
           api.get('/leituras/ativas'),
           api.get('/desafios'),
           api.get('/eventos'),
         ]);
 
         if (rPerfil.status   === 'fulfilled') setPerfil(rPerfil.value.data);
-        if (rPontos.status   === 'fulfilled') setPontos(rPontos.value.data);
         if (rLeituras.status === 'fulfilled') setLeituras(rLeituras.value.data ?? []);
         if (rDesafios.status === 'fulfilled') setDesafios(rDesafios.value.data ?? []);
         if (rEventos.status  === 'fulfilled') setEventos(rEventos.value.data ?? []);
+        await refreshPontos();
       } finally {
         setCarregando(false);
       }
     }
     carregar();
-  }, []);
+  }, [refreshPontos]);
 
   /* Próxima devolução */
   const proximaDevolucao = leituras.length > 0

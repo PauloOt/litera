@@ -10,6 +10,7 @@ public class RankingItemDTO {
 
     private Integer posicao;
     private String nomeCompleto;
-    private Integer saldoAtual;
+    private Integer pontosMes;
     private Nivel nivel;
+    private String foto;
 }

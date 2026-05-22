@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Search, Heart, BookMarked, BookX, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Heart, BookMarked, BookX, ExternalLink, Star, ShoppingCart } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { CardLivro } from '../components/CardLivro';
 import api from '../services/api';
@@ -50,14 +51,26 @@ function BotoesAcao({ livro, favoritados, desejos, onToggleFav, onToggleDesejo }
   );
 }
 
+/* ─── Badge de nota Google Books ─────────────────────────────────────── */
+function NotaBadge({ nota }) {
+  if (nota == null) return null;
+  return (
+    <div className="absolute top-2 left-2 flex items-center gap-1 bg-espresso/90 text-cream text-xs font-body font-medium px-2 py-0.5 rounded-full">
+      <Star size={10} className="text-stone fill-stone" />
+      {nota.toFixed(1)}
+    </div>
+  );
+}
+
 /* ─── Grid de livros ─────────────────────────────────────────────────── */
-function GridLivros({ livros, favoritados, desejos, onToggleFav, onToggleDesejo, modoRemover, onRemover }) {
+function GridLivros({ livros, favoritados, desejos, onToggleFav, onToggleDesejo, modoRemover, onRemover, onClickLivro }) {
   if (livros.length === 0) return null;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
       {livros.map(l => (
-        <div key={l.id} className="relative">
+        <div key={l.id} className="relative cursor-pointer" onClick={() => onClickLivro(l.id)}>
+          <NotaBadge nota={l.nota ?? l.notaGoogle} />
           <BotoesAcao
             livro={l}
             favoritados={favoritados}
@@ -82,15 +95,28 @@ function GridLivros({ livros, favoritados, desejos, onToggleFav, onToggleDesejo,
                   Remover
                 </button>
               ) : (
-                <a
-                  href={l.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-1.5 w-full font-body text-xs text-cream bg-bark px-3 py-1.5 rounded-lg hover:brightness-90 transition-all"
-                >
-                  <ExternalLink size={12} />
-                  Comprar no ML
-                </a>
+                <div className="flex gap-1.5">
+                  {l.link && (
+                    <a
+                      href={l.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1 flex-1 font-body text-xs text-cream bg-bark px-2 py-1.5 rounded-lg hover:brightness-90 transition-all"
+                    >
+                      <ExternalLink size={11} />
+                      Google Books
+                    </a>
+                  )}
+                  <a
+                    href={`https://www.amazon.com.br/s?k=${encodeURIComponent((l.titulo || '') + ' ' + (l.autor || ''))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1 flex-1 font-body text-xs text-espresso bg-sand border border-stone/30 px-2 py-1.5 rounded-lg hover:bg-stone/20 transition-all"
+                  >
+                    <ShoppingCart size={11} />
+                    Amazon
+                  </a>
+                </div>
               )
             }
           />
@@ -102,6 +128,7 @@ function GridLivros({ livros, favoritados, desejos, onToggleFav, onToggleDesejo,
 
 /* ─── Página principal ───────────────────────────────────────────────── */
 export default function Mercado() {
+  const navigate = useNavigate();
   const [busca, setBusca] = useState('');
   const [abaAtiva, setAbaAtiva] = useState('Resultados');
   const [resultados, setResultados] = useState([]);
@@ -140,7 +167,7 @@ export default function Mercado() {
     setBuscaFeita(true);
     setUltimaBusca(busca.trim());
     try {
-      const res = await api.get('/ml/busca', { params: { titulo: busca.trim() } });
+      const res = await api.get('/livros/busca', { params: { titulo: busca.trim() } });
       setResultados(res.data);
     } catch {
       setResultados([]);
@@ -161,7 +188,7 @@ export default function Mercado() {
         setFavoritados(prev => { const s = new Set(prev); s.delete(livro.id); return s; });
         setFavoritos(prev => prev.filter(l => l.id !== livro.id));
       } else {
-        await api.post(`/ml/favoritos/${livro.id}`);
+        await api.post(`/ml/favoritos/${livro.id}`, livro);
         setFavoritados(prev => new Set([...prev, livro.id]));
         setFavoritos(prev => [...prev, livro]);
       }
@@ -176,7 +203,7 @@ export default function Mercado() {
         setDesejados(prev => { const s = new Set(prev); s.delete(livro.id); return s; });
         setDesejos(prev => prev.filter(l => l.id !== livro.id));
       } else {
-        await api.post(`/ml/desejos/${livro.id}`);
+        await api.post(`/ml/desejos/${livro.id}`, livro);
         setDesejados(prev => new Set([...prev, livro.id]));
         setDesejos(prev => [...prev, livro]);
       }
@@ -191,9 +218,9 @@ export default function Mercado() {
         <div className="max-w-5xl mx-auto w-full">
         {/* Cabeçalho */}
         <div className="mb-6">
-          <h1 className="font-display font-bold text-3xl text-espresso">Descobrir Livros</h1>
+          <h1 className="font-display font-bold text-3xl text-espresso">Livros</h1>
           <p className="font-body text-sm text-walnut mt-1">
-            Busque, favorite e compre diretamente no Mercado Livre
+            Busque livros com notas e informações do Google Books
           </p>
         </div>
 
@@ -281,6 +308,7 @@ export default function Mercado() {
                 onToggleFav={toggleFavorito}
                 onToggleDesejo={toggleDesejo}
                 modoRemover={false}
+                onClickLivro={id => navigate(`/livros/${id}`)}
               />
             )}
           </>
@@ -302,6 +330,7 @@ export default function Mercado() {
                 onToggleDesejo={toggleDesejo}
                 modoRemover
                 onRemover={toggleFavorito}
+                onClickLivro={id => navigate(`/livros/${id}`)}
               />
             )}
           </>
@@ -323,6 +352,7 @@ export default function Mercado() {
                 onToggleDesejo={toggleDesejo}
                 modoRemover
                 onRemover={toggleDesejo}
+                onClickLivro={id => navigate(`/livros/${id}`)}
               />
             )}
           </>

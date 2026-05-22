@@ -11,4 +11,7 @@ public class PontosResponseDTO {
     private Long usuarioId;
     private Integer saldo;
     private Nivel nivel;
+    private String plano;
+    private Float multiplicador;
+    private Integer pontosParaProximoNivel;
 }

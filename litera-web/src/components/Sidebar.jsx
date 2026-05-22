@@ -7,21 +7,34 @@ import {
   Star,
   User,
   LogOut,
+  CalendarPlus,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
-const navItems = [
-  { icon: LayoutDashboard, to: '/dashboard',  label: 'Dashboard' },
-  { icon: BookOpen,        to: '/leituras',   label: 'Minhas Leituras' },
-  { icon: ShoppingBag,     to: '/mercado',    label: 'Mercado Livre' },
-  { icon: CalendarDays,    to: '/eventos',    label: 'Eventos' },
-  { icon: Star,            to: '/pontos',     label: 'Pontos e Desafios' },
-  { icon: User,            to: '/perfil',     label: 'Perfil' },
+const baseNavItems = [
+  { icon: LayoutDashboard, to: '/dashboard',   label: 'Dashboard' },
+  { icon: BookOpen,        to: '/leituras',    label: 'Minhas Leituras' },
+  { icon: ShoppingBag,     to: '/mercado',     label: 'Livros' },
+  { icon: CalendarDays,    to: '/eventos',     label: 'Eventos' },
+  { icon: Star,            to: '/pontos',      label: 'Pontos e Desafios' },
+  { icon: User,            to: '/perfil',      label: 'Perfil' },
 ];
 
+const organizadorItem = { icon: CalendarPlus, to: '/organizador', label: 'Meus Eventos' };
+const adminItem = { icon: Shield, to: '/admin', label: 'Painel Admin' };
+
 export function Sidebar() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
+
+  const isOrganizador = user?.perfil === 'ROLE_ORGANIZADOR' || user?.perfil === 'ROLE_ADMIN';
+  const isAdmin = user?.perfil === 'ROLE_ADMIN';
+  const navItems = [
+    ...baseNavItems,
+    ...(isOrganizador ? [organizadorItem] : []),
+    ...(isAdmin ? [adminItem] : []),
+  ];
 
   function handleLogout() {
     logout();
