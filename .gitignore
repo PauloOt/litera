@@ -24,3 +24,7 @@ litera-api/target/
 
 # Claude
 .claude/
+
+# Docker / Secrets
+.env
+

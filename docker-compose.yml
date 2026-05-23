@@ -1,0 +1,53 @@
+services:
+  litera-db:
+    image: mysql:8.0
+    container_name: litera-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-0705}
+      MYSQL_DATABASE: litera
+    ports:
+      - "3306:3306"
+    volumes:
+      - litera-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  litera-api:
+    build:
+      context: ./litera-api
+      dockerfile: Dockerfile
+    container_name: litera-api
+    restart: unless-stopped
+    depends_on:
+      litera-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: litera-db
+      DB_PASSWORD: ${DB_PASSWORD:-0705}
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY}
+    ports:
+      - "8080:8080"
+    volumes:
+      - api-uploads:/app/uploads
+
+  litera-web:
+    build:
+      context: ./litera-web
+      dockerfile: Dockerfile
+    container_name: litera-web
+    restart: unless-stopped
+    depends_on:
+      - litera-api
+    ports:
+      - "80:80"
+
+volumes:
+  litera-mysql-data:
+  api-uploads:
