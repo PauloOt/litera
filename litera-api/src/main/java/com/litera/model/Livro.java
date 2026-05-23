@@ -35,4 +35,10 @@ public class Livro {
 
     @Column(name = "capa_url", length = 255)
     private String capaUrl;
+
+    @Column(name = "nota_google")
+    private Double notaGoogle;
+
+    @Column(name = "generos", length = 300)
+    private String generos;
 }

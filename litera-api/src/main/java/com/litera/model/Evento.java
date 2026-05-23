@@ -47,4 +47,36 @@ public class Evento {
 
     @Column(name = "imagem_capa_url", length = 255)
     private String imagemCapaUrl;
+
+    @Column(name = "data_criacao")
+    private LocalDateTime dataCriacao;
+
+    @Column(name = "local", nullable = false)
+    private String local;
+
+    @Column(name = "preco", precision = 10, scale = 2, nullable = false)
+    private BigDecimal preco;
+
+    @PrePersist
+    private void prePersist() {
+        if (dataCriacao == null) {
+            dataCriacao = LocalDateTime.now();
+        }
+        // Sincroniza campos duplicados
+        if (local == null && localizacao != null) {
+            local = localizacao;
+        }
+        if (localizacao == null && local != null) {
+            localizacao = local;
+        }
+        if (preco == null && precoIngresso != null) {
+            preco = precoIngresso;
+        }
+        if (preco == null) {
+            preco = BigDecimal.ZERO;
+        }
+        if (local == null) {
+            local = "";
+        }
+    }
 }
