@@ -52,4 +52,7 @@ public class Usuario {
 
     @Column(name = "data_cadastro")
     private LocalDateTime dataCadastro;
+
+    @Column(nullable = false)
+    private Boolean ativo = true;
 }

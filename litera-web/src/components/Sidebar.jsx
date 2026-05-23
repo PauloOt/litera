@@ -9,6 +9,7 @@ import {
   LogOut,
   CalendarPlus,
   Shield,
+  Ticket,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -17,6 +18,7 @@ const baseNavItems = [
   { icon: BookOpen,        to: '/leituras',    label: 'Minhas Leituras' },
   { icon: ShoppingBag,     to: '/mercado',     label: 'Livros' },
   { icon: CalendarDays,    to: '/eventos',     label: 'Eventos' },
+  { icon: Ticket,          to: '/meus-ingressos', label: 'Meus Ingressos' },
   { icon: Star,            to: '/pontos',      label: 'Pontos e Desafios' },
   { icon: User,            to: '/perfil',      label: 'Perfil' },
 ];

@@ -39,7 +39,8 @@ public class PagamentoController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody IngressoRequestDTO dto) {
         Long usuarioId = getUsuarioId(userDetails);
-        String url = pagamentoService.criarSessaoIngresso(usuarioId, dto.getEventoId(), dto.getCodigoCupom());
+        int qtd = dto.getQuantidade() != null && dto.getQuantidade() > 0 ? dto.getQuantidade() : 1;
+        String url = pagamentoService.criarSessaoIngresso(usuarioId, dto.getEventoId(), dto.getCodigoCupom(), qtd);
         // url == null significa evento gratuito (ingresso já criado)
         String destino = url != null ? url : "http://localhost:5173/meus-ingressos";
         return ResponseEntity.ok(new CheckoutResponseDTO(destino));

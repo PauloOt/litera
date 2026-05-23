@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarDays, MapPin, Users, ArrowLeft } from 'lucide-react';
+import { CalendarDays, MapPin, Users, ArrowLeft, Minus, Plus } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { Modal } from '../components/Modal';
 import api from '../services/api';
@@ -26,10 +26,13 @@ function formatarPreco(preco) {
 /* ─── Modal de confirmação de compra ─────────────────────────────────── */
 function ModalCompra({ evento, onClose }) {
   const navigate = useNavigate();
+  const [quantidade, setQuantidade] = useState(1);
   const [cupom, setCupom] = useState('');
-  const [cupomStatus, setCupomStatus] = useState(null); // null | 'validando' | { valido, percentualDesconto }
+  const [cupomStatus, setCupomStatus] = useState(null);
   const [comprando, setComprando] = useState(false);
   const [erro, setErro] = useState('');
+
+  const maxIngressos = Math.min(evento.vagasRestantes ?? 10, 10);
 
   async function validarCupom(codigo) {
     if (!codigo.trim()) { setCupomStatus(null); return; }
@@ -46,7 +49,7 @@ function ModalCompra({ evento, onClose }) {
     setComprando(true);
     setErro('');
     try {
-      const body = { eventoId: evento.id };
+      const body = { eventoId: evento.id, quantidade };
       if (cupom.trim()) body.codigoCupom = cupom.trim();
       const res = await api.post('/pagamentos/ingresso', body, { _silencioso: true });
       window.location.href = res.data.url;
@@ -58,34 +61,65 @@ function ModalCompra({ evento, onClose }) {
     }
   }
 
-  const precoFinal = evento.descontoPlano?.precoFinal ?? evento.preco;
+  const precoUnitario = evento.descontoPlano?.precoFinal ?? evento.preco;
   const desconto = evento.descontoPlano?.percentual ?? 0;
+  const totalOriginal = (evento.preco ?? 0) * quantidade;
+  const totalFinal = (precoUnitario ?? 0) * quantidade;
 
   return (
     <Modal isOpen={!!evento} onClose={onClose} title="Confirmar compra">
       <div className="flex flex-col gap-4">
         <p className="font-body text-sm text-walnut">
-          Você está comprando um ingresso para{' '}
+          Você está comprando ingresso(s) para{' '}
           <span className="font-medium text-espresso">"{evento.titulo}"</span>
         </p>
 
+        {/* Quantidade */}
+        <div>
+          <label className="font-body text-sm text-walnut block mb-2">Quantidade</label>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setQuantidade(q => Math.max(1, q - 1))}
+              disabled={quantidade <= 1}
+              className="w-9 h-9 rounded-lg border border-sand flex items-center justify-center hover:bg-sand transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Minus size={16} className="text-espresso" />
+            </button>
+            <span className="font-display font-bold text-xl text-espresso w-8 text-center">{quantidade}</span>
+            <button
+              type="button"
+              onClick={() => setQuantidade(q => Math.min(maxIngressos, q + 1))}
+              disabled={quantidade >= maxIngressos}
+              className="w-9 h-9 rounded-lg border border-sand flex items-center justify-center hover:bg-sand transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Plus size={16} className="text-espresso" />
+            </button>
+            <span className="font-body text-xs text-walnut">máx. {maxIngressos}</span>
+          </div>
+        </div>
+
         {/* Preço */}
         <div className="bg-sand rounded-xl p-4 flex flex-col gap-1">
+          <div className="flex justify-between font-body text-sm text-walnut">
+            <span>{quantidade}x ingresso</span>
+            <span>{formatarPreco(precoUnitario)} cada</span>
+          </div>
           {desconto > 0 && (
             <div className="flex justify-between font-body text-sm text-walnut">
-              <span>Preço original</span>
-              <span className="line-through">{formatarPreco(evento.preco)}</span>
+              <span>Subtotal original</span>
+              <span className="line-through">{formatarPreco(totalOriginal)}</span>
             </div>
           )}
           {desconto > 0 && (
             <div className="flex justify-between font-body text-sm text-stone">
               <span>Desconto do plano ({desconto}%)</span>
-              <span>-{formatarPreco(evento.preco - precoFinal)}</span>
+              <span>-{formatarPreco(totalOriginal - totalFinal)}</span>
             </div>
           )}
-          <div className="flex justify-between font-display font-bold text-lg text-bark pt-1">
+          <div className="flex justify-between font-display font-bold text-lg text-bark pt-1 border-t border-walnut/10 mt-1">
             <span>Total</span>
-            <span>{formatarPreco(precoFinal)}</span>
+            <span>{formatarPreco(totalFinal)}</span>
           </div>
         </div>
 
@@ -117,7 +151,7 @@ function ModalCompra({ evento, onClose }) {
         </div>
 
         <p className="font-body text-xs text-walnut bg-stone/10 rounded-lg px-3 py-2">
-          +40 pontos ao realizar o check-in no evento
+          +40 pontos por ingresso ao realizar o check-in no evento
         </p>
 
         {erro && <p className="font-body text-sm text-red-600">{erro}</p>}
@@ -134,7 +168,7 @@ function ModalCompra({ evento, onClose }) {
             disabled={comprando}
             className="font-body text-sm text-cream bg-bark px-4 py-2 rounded-lg hover:brightness-90 transition-all disabled:opacity-60"
           >
-            {comprando ? 'Redirecionando…' : 'Comprar ingresso'}
+            {comprando ? 'Redirecionando…' : `Comprar ${quantidade} ingresso${quantidade > 1 ? 's' : ''}`}
           </button>
         </div>
       </div>

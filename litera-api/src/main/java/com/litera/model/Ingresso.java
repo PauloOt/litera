@@ -37,4 +37,20 @@ public class Ingresso {
 
     @Column(name = "data_compra")
     private LocalDateTime dataCompra;
+
+    @Column(name = "valor_pago", precision = 10, scale = 2, nullable = false)
+    private BigDecimal valorPago;
+
+    @Column(name = "data_checkin")
+    private LocalDateTime dataCheckin;
+
+    @Column(name = "stripe_payment_intent_id", length = 100)
+    private String stripePaymentIntentId;
+
+    @PrePersist
+    private void prePersist() {
+        if (valorPago == null) {
+            valorPago = valorFinal != null ? valorFinal : BigDecimal.ZERO;
+        }
+    }
 }

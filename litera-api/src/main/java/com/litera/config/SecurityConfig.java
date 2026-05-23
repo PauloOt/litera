@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/cadastro", "/auth/login").permitAll()
                         .requestMatchers("/planos").permitAll()
                         .requestMatchers("/pagamentos/webhook").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

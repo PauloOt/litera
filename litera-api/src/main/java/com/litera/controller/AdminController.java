@@ -1,9 +1,13 @@
 package com.litera.controller;
 
+import com.litera.dto.EventoDTO;
 import com.litera.dto.UsuarioAdminDTO;
+import com.litera.model.Evento;
 import com.litera.model.Usuario;
 import com.litera.model.enums.Perfil;
+import com.litera.model.enums.StatusEvento;
 import com.litera.repository.AssinaturaUsuarioRepository;
+import com.litera.repository.EventoRepository;
 import com.litera.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,31 +28,65 @@ public class AdminController {
 
     private final UsuarioRepository usuarioRepository;
     private final AssinaturaUsuarioRepository assinaturaRepository;
+    private final EventoRepository eventoRepository;
+
+    /* ─── Usuários ──────────────────────────────────────────────── */
 
     @GetMapping("/usuarios")
     public ResponseEntity<List<UsuarioAdminDTO>> listarUsuarios(
             @AuthenticationPrincipal UserDetails userDetails) {
-
         requireAdmin(userDetails);
-        List<UsuarioAdminDTO> lista = usuarioRepository.findAll().stream()
-                .map(u -> {
-                    String plano = assinaturaRepository
-                            .findByUsuarioIdAndStatusAssinatura(u.getId(), "ATIVA")
-                            .map(a -> a.getPlano() != null ? a.getPlano().getNome() : "Gratuito")
-                            .orElse("Gratuito");
-                    return new UsuarioAdminDTO(
-                            u.getId(),
-                            u.getNome(),
-                            u.getEmail(),
-                            u.getCpf(),
-                            plano,
-                            u.getDataCadastro(),
-                            u.getPerfil() != null ? u.getPerfil().name() : null,
-                            u.getFotoUrl()
-                    );
-                })
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(lista);
+        return ResponseEntity.ok(usuarioRepository.findAll().stream()
+                .map(this::toUsuarioDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @PutMapping("/usuarios/{id}/promover")
+    public ResponseEntity<Void> promover(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        requireAdmin(userDetails);
+        usuarioRepository.findById(id).ifPresent(u -> {
+            u.setPerfil(Perfil.ROLE_ORGANIZADOR);
+            usuarioRepository.save(u);
+        });
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/usuarios/{id}/rebaixar")
+    public ResponseEntity<Void> rebaixar(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        requireAdmin(userDetails);
+        usuarioRepository.findById(id).ifPresent(u -> {
+            u.setPerfil(Perfil.ROLE_USUARIO);
+            usuarioRepository.save(u);
+        });
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/usuarios/{id}/desativar")
+    public ResponseEntity<Void> desativar(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        requireAdmin(userDetails);
+        usuarioRepository.findById(id).ifPresent(u -> {
+            u.setAtivo(false);
+            usuarioRepository.save(u);
+        });
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/usuarios/{id}/reativar")
+    public ResponseEntity<Void> reativar(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        requireAdmin(userDetails);
+        usuarioRepository.findById(id).ifPresent(u -> {
+            u.setAtivo(true);
+            usuarioRepository.save(u);
+        });
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/usuarios/{id}/role")
@@ -56,11 +94,9 @@ public class AdminController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-
         requireAdmin(userDetails);
         String roleStr = body.get("role");
         if (roleStr == null) return ResponseEntity.badRequest().build();
-
         usuarioRepository.findById(id).ifPresent(u -> {
             try {
                 u.setPerfil(Perfil.valueOf(roleStr));
@@ -68,6 +104,83 @@ public class AdminController {
             } catch (IllegalArgumentException ignored) {}
         });
         return ResponseEntity.ok().build();
+    }
+
+    /* ─── Eventos ───────────────────────────────────────────────── */
+
+    @GetMapping("/eventos")
+    public ResponseEntity<List<EventoDTO>> listarEventos(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        requireAdmin(userDetails);
+        return ResponseEntity.ok(eventoRepository.findAll().stream()
+                .map(this::toEventoDTO)
+                .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/eventos/pendentes")
+    public ResponseEntity<List<EventoDTO>> eventosPendentes(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        requireAdmin(userDetails);
+        return ResponseEntity.ok(eventoRepository.findByStatus(StatusEvento.PENDENTE).stream()
+                .map(this::toEventoDTO)
+                .collect(Collectors.toList()));
+    }
+
+    /* ─── Logs (placeholder) ────────────────────────────────────── */
+
+    @GetMapping("/logins")
+    public ResponseEntity<List<?>> logins(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        requireAdmin(userDetails);
+        return ResponseEntity.ok(List.of());
+    }
+
+    /* ─── Helpers ───────────────────────────────────────────────── */
+
+    private UsuarioAdminDTO toUsuarioDTO(Usuario u) {
+        String plano = assinaturaRepository
+                .findByUsuarioIdAndStatusAssinatura(u.getId(), "ATIVA")
+                .map(a -> a.getPlano() != null ? a.getPlano().getNome() : "Gratuito")
+                .orElse("Gratuito");
+        return new UsuarioAdminDTO(
+                u.getId(),
+                u.getNome(),
+                u.getEmail(),
+                u.getCpf(),
+                plano,
+                u.getDataCadastro(),
+                u.getPerfil() != null ? u.getPerfil().name() : null,
+                u.getFotoUrl(),
+                u.getAtivo()
+        );
+    }
+
+    private EventoDTO toEventoDTO(Evento e) {
+        int vagasRestantes = e.getVagasDisponiveis() != null ? e.getVagasDisponiveis() : 0;
+        int vagasTotais = e.getVagasTotais() != null ? e.getVagasTotais() : 0;
+        boolean ultimasVagas = vagasTotais > 0 && vagasRestantes > 0
+                && vagasRestantes <= (vagasTotais * 0.1);
+        String organizadorNome = null;
+        try {
+            if (e.getOrganizador() != null) {
+                organizadorNome = e.getOrganizador().getNome();
+            }
+        } catch (Exception ignored) {}
+        return new EventoDTO(
+                e.getId(),
+                e.getTitulo(),
+                e.getDescricao(),
+                e.getLocalizacao(),
+                e.getDataHora(),
+                e.getPrecoIngresso(),
+                vagasRestantes,
+                vagasTotais,
+                vagasTotais - vagasRestantes,
+                e.getImagemCapaUrl(),
+                ultimasVagas,
+                e.getStatus() != null ? e.getStatus().name() : null,
+                organizadorNome
+        );
     }
 
     private void requireAdmin(UserDetails userDetails) {

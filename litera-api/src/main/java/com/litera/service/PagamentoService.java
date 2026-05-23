@@ -108,31 +108,35 @@ public class PagamentoService {
     /* ─── Ingresso de evento ─────────────────────────────────────────── */
 
     @Transactional
-    public String criarSessaoIngresso(Long usuarioId, Long eventoId, String codigoCupom) {
+    public String criarSessaoIngresso(Long usuarioId, Long eventoId, String codigoCupom, int quantidade) {
         Evento evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento não encontrado"));
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
-        if (ingressoRepository.existsByUsuarioIdAndEventoId(usuarioId, eventoId)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já possui ingresso para este evento");
+        if (evento.getVagasDisponiveis() != null && evento.getVagasDisponiveis() < quantidade) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    evento.getVagasDisponiveis() <= 0 ? "Evento esgotado"
+                            : "Apenas " + evento.getVagasDisponiveis() + " vagas restantes");
         }
 
-        if (evento.getVagasDisponiveis() != null && evento.getVagasDisponiveis() <= 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Evento esgotado");
+        if (quantidade < 1 || quantidade > 10) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade deve ser entre 1 e 10");
         }
 
         BigDecimal preco = evento.getPrecoIngresso() != null ? evento.getPrecoIngresso() : BigDecimal.ZERO;
 
-        // Evento gratuito: cria ingresso diretamente sem Stripe
+        // Evento gratuito: cria ingressos diretamente sem Stripe
         if (preco.compareTo(BigDecimal.ZERO) == 0) {
-            criarIngresso(usuario, evento, BigDecimal.ZERO, null, null);
+            for (int i = 0; i < quantidade; i++) {
+                criarIngresso(usuario, evento, BigDecimal.ZERO, null, null);
+            }
             return null;
         }
 
         // Valida e aplica cupom de desconto
-        BigDecimal precoFinal = preco;
+        BigDecimal precoUnitario = preco;
         String cupomValido = null;
 
         if (codigoCupom != null && !codigoCupom.isBlank()) {
@@ -144,11 +148,11 @@ public class PagamentoService {
 
             BigDecimal desconto = BigDecimal.valueOf(resgate.getPercentualDesconto())
                     .divide(BigDecimal.valueOf(100));
-            precoFinal = preco.multiply(BigDecimal.ONE.subtract(desconto)).setScale(2, RoundingMode.HALF_UP);
+            precoUnitario = preco.multiply(BigDecimal.ONE.subtract(desconto)).setScale(2, RoundingMode.HALF_UP);
             cupomValido = codigoCupom.trim();
         }
 
-        long valorEmCentavos = precoFinal.multiply(BigDecimal.valueOf(100)).longValue();
+        long valorUnitarioCentavos = precoUnitario.multiply(BigDecimal.valueOf(100)).longValue();
 
         try {
             SessionCreateParams.Builder builder = SessionCreateParams.builder()
@@ -159,12 +163,13 @@ public class PagamentoService {
                     .putMetadata("tipo", "INGRESSO")
                     .putMetadata("usuarioId", String.valueOf(usuarioId))
                     .putMetadata("eventoId", String.valueOf(eventoId))
-                    .putMetadata("precoFinal", precoFinal.toPlainString())
+                    .putMetadata("quantidade", String.valueOf(quantidade))
+                    .putMetadata("precoFinal", precoUnitario.toPlainString())
                     .addLineItem(SessionCreateParams.LineItem.builder()
-                            .setQuantity(1L)
+                            .setQuantity((long) quantidade)
                             .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                                     .setCurrency("brl")
-                                    .setUnitAmount(valorEmCentavos)
+                                    .setUnitAmount(valorUnitarioCentavos)
                                     .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
                                             .setName("Ingresso — " + evento.getTitulo())
                                             .build())
@@ -208,8 +213,8 @@ public class PagamentoService {
         Long eventoId = Long.valueOf(session.getMetadata().get("eventoId"));
         String precoFinalStr = session.getMetadata().get("precoFinal");
         String codigoCupom = session.getMetadata().get("codigoCupom");
-
-        if (ingressoRepository.existsByUsuarioIdAndEventoId(usuarioId, eventoId)) return;
+        String qtdStr = session.getMetadata().get("quantidade");
+        int quantidade = qtdStr != null ? Integer.parseInt(qtdStr) : 1;
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
@@ -221,7 +226,9 @@ public class PagamentoService {
                 ? new BigDecimal(precoFinalStr)
                 : evento.getPrecoIngresso();
 
-        criarIngresso(usuario, evento, precoFinal, sessionId, codigoCupom);
+        for (int i = 0; i < quantidade; i++) {
+            criarIngresso(usuario, evento, precoFinal, sessionId, i == 0 ? codigoCupom : null);
+        }
     }
 
     /* ─── Webhook ────────────────────────────────────────────────────── */
@@ -301,9 +308,8 @@ public class PagamentoService {
         Long eventoId = Long.valueOf(session.getMetadata().get("eventoId"));
         String precoFinalStr = session.getMetadata().get("precoFinal");
         String codigoCupom = session.getMetadata().get("codigoCupom");
-
-        // Evita ingresso duplicado caso o webhook chegue mais de uma vez
-        if (ingressoRepository.existsByUsuarioIdAndEventoId(usuarioId, eventoId)) return;
+        String qtdStr = session.getMetadata().get("quantidade");
+        int quantidade = qtdStr != null ? Integer.parseInt(qtdStr) : 1;
 
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -315,7 +321,9 @@ public class PagamentoService {
                 ? new BigDecimal(precoFinalStr)
                 : evento.getPrecoIngresso();
 
-        criarIngresso(usuario, evento, precoFinal, session.getId(), codigoCupom);
+        for (int i = 0; i < quantidade; i++) {
+            criarIngresso(usuario, evento, precoFinal, session.getId(), i == 0 ? codigoCupom : null);
+        }
     }
 
     private void criarIngresso(Usuario usuario, Evento evento,

@@ -21,4 +21,5 @@ public class EventoDTO {
     private String capa;
     private Boolean ultimasVagas;
     private String status;
+    private String organizador;
 }

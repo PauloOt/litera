@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Plus, CalendarDays, Users, Clock, CheckCircle, XCircle, Pencil, Trash2, Eye } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Plus, CalendarDays, Users, Clock, CheckCircle, XCircle, Pencil, Trash2, Eye, Upload, X } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { Modal } from '../components/Modal';
 import api from '../services/api';
@@ -63,6 +63,9 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
   const [form, setForm]       = useState(FORM_VAZIO);
   const [erro, setErro]       = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [previewCapa, setPreviewCapa] = useState(null);
+  const [capaArquivo, setCapaArquivo] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (eventoEdit) {
@@ -75,14 +78,40 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
         vagas: eventoEdit.vagasTotais ?? '',
         capa: eventoEdit.capa || '',
       });
+      setPreviewCapa(eventoEdit.capa || null);
+      setCapaArquivo(null);
     } else {
       setForm(FORM_VAZIO);
+      setPreviewCapa(null);
+      setCapaArquivo(null);
     }
   }, [eventoEdit]);
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
     setErro('');
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setErro('Selecione um arquivo de imagem válido.');
+      return;
+    }
+    setCapaArquivo(file);
+    setForm(f => ({ ...f, capa: '' }));
+    setErro('');
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreviewCapa(ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoverCapa() {
+    setCapaArquivo(null);
+    setPreviewCapa(null);
+    setForm(f => ({ ...f, capa: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   async function handleSubmit(e) {
@@ -93,6 +122,18 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
     }
     setSalvando(true);
     try {
+      let capaUrl = form.capa || null;
+
+      // Se tem arquivo selecionado, faz upload via multipart
+      if (capaArquivo) {
+        const formData = new FormData();
+        formData.append('file', capaArquivo);
+        const uploadRes = await api.post('/upload/imagem', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        capaUrl = uploadRes.data.url ?? uploadRes.data;
+      }
+
       const payload = {
         titulo: form.titulo,
         descricao: form.descricao,
@@ -100,7 +141,7 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
         dataHora: form.data ? form.data + ':00' : null,
         preco: Number(form.preco) || 0,
         vagasTotais: Number(form.vagas) || 0,
-        capa: form.capa || null,
+        capa: capaUrl,
       };
       if (eventoEdit) {
         const { data } = await api.put(`/eventos/${eventoEdit.id}`, payload);
@@ -110,9 +151,14 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
         onSalvo(data, false);
       }
       setForm(FORM_VAZIO);
+      setPreviewCapa(null);
+      setCapaArquivo(null);
       onFechar();
-    } catch {
-      setErro(eventoEdit ? 'Erro ao editar evento.' : 'Erro ao criar evento. Tente novamente.');
+    } catch (err) {
+      const msg = err?.response?.data?.erro || err?.response?.data?.message || err?.message || '';
+      setErro(eventoEdit
+        ? `Erro ao editar evento. ${msg}`
+        : `Erro ao criar evento. ${msg}`);
     } finally {
       setSalvando(false);
     }
@@ -120,6 +166,8 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
 
   function handleFechar() {
     setForm(FORM_VAZIO);
+    setPreviewCapa(null);
+    setCapaArquivo(null);
     setErro('');
     onFechar();
   }
@@ -153,8 +201,69 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
             <input name="vagas" type="number" min="0" value={form.vagas} onChange={handleChange} style={inputCls} placeholder="Ex: 100" />
           </Campo>
         </div>
-        <Campo label="URL da imagem de capa (opcional)">
-          <input name="capa" value={form.capa} onChange={handleChange} style={inputCls} placeholder="https://..." />
+
+        {/* Campo de imagem de capa */}
+        <Campo label="Imagem de capa">
+          {previewCapa ? (
+            <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--color-sand)' }}>
+              <img src={previewCapa} alt="Preview" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+              <button
+                type="button"
+                onClick={handleRemoverCapa}
+                style={{
+                  position: 'absolute', top: 8, right: 8,
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.6)', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={14} color="#fff" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: '2px dashed var(--color-sand)', borderRadius: 10,
+                padding: '24px 16px', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: 8, cursor: 'pointer',
+                transition: 'border-color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--color-stone)'}
+              onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--color-sand)'}
+            >
+              <Upload size={24} style={{ color: 'var(--color-walnut)' }} />
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--color-walnut)', textAlign: 'center' }}>
+                Clique para selecionar uma foto do dispositivo
+              </span>
+              <span style={{ fontFamily: 'var(--font-body)', fontSize: 11, color: 'var(--color-walnut)', opacity: 0.6 }}>
+                JPG, PNG ou WebP
+              </span>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+          {/* Opção alternativa de URL */}
+          {!capaArquivo && !previewCapa && (
+            <div style={{ marginTop: 8 }}>
+              <input
+                name="capa"
+                value={form.capa}
+                onChange={(e) => {
+                  handleChange(e);
+                  setPreviewCapa(e.target.value || null);
+                }}
+                style={inputCls}
+                placeholder="Ou cole a URL da imagem aqui..."
+              />
+            </div>
+          )}
         </Campo>
 
         {erro && <p style={{ fontFamily: 'var(--font-body)', fontSize: 13, color: '#EF4444' }}>{erro}</p>}

@@ -16,4 +16,5 @@ public class UsuarioAdminDTO {
     private LocalDateTime criadoEm;
     private String role;
     private String foto;
+    private Boolean ativo;
 }

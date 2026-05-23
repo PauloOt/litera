@@ -87,6 +87,10 @@ public class IngressoController {
         int vagasTotais = e.getVagasTotais() != null ? e.getVagasTotais() : 0;
         boolean ultimasVagas = vagasTotais > 0 && vagasRestantes > 0
                 && vagasRestantes <= (vagasTotais * 0.1);
+        String organizadorNome = null;
+        try {
+            if (e.getOrganizador() != null) organizadorNome = e.getOrganizador().getNome();
+        } catch (Exception ignored) {}
         return new EventoDTO(
                 e.getId(),
                 e.getTitulo(),
@@ -99,7 +103,8 @@ public class IngressoController {
                 vagasTotais - vagasRestantes,
                 e.getImagemCapaUrl(),
                 ultimasVagas,
-                e.getStatus() != null ? e.getStatus().name() : null
+                e.getStatus() != null ? e.getStatus().name() : null,
+                organizadorNome
         );
     }
 }
