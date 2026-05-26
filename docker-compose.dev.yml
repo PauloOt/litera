@@ -1,0 +1,22 @@
+# Override para desenvolvimento local com hot-reload.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up litera-db litera-web
+# A API roda fora do Docker (mvn spring-boot:run) para aproveitar o DevTools.
+
+services:
+  litera-web:
+    image: node:22-alpine
+    container_name: litera-web-dev
+    build: !reset null
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./litera-web:/app
+      - litera-web-node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8080
+    depends_on: !reset []
+
+volumes:
+  litera-web-node-modules:
