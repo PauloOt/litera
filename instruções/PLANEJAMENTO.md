@@ -28,7 +28,7 @@
 | Bug `Planos.jsx`: envia `plano: "Pro"` em vez de `planoId: <Long>` | ✅ Corrigido (2026-05-28) |
 | Histórico de pagamentos + reembolsos + mais eventos Stripe | ✅ Completo (2026-05-28, commit `5d2cb47`) |
 | Validação `@Valid` nos DTOs do backend | ✅ Completo (2026-05-28) |
-| Higiene do repo pai (untracked: `.claude/`, `.idea/`, `DOCKER.md`, `PLANEJAMENTO.md`) | 🧹 Pendente |
+| Higiene do repo pai (untracked: `.claude/`, `.idea/`, `DOCKER.md`, `PLANEJAMENTO.md`) | ✅ Resolvido (2026-05-28) |
 
 ---
 
@@ -225,26 +225,15 @@ A página `/organizador` existe, mas faltam ferramentas importantes para o organ
   ```
 - [x] Front consumindo o payload: `Cadastro.jsx` e `Login.jsx` mapeiam `campos` para o state de erros por campo; `Organizador/EventoForm` concatena na mensagem global.
 
-### 6.3 Higiene do repo pai (`C:\Users\Paulo\Documents\Litera\`)
+### 6.3 Higiene do repo pai ✅ Resolvido (2026-05-28, commit `1d6f115`)
 
-**Sintoma atual (`git status`):**
-```
-M  litera                       ← submódulo à frente do commit registrado
-?? .claude/
-?? .idea/
-?? .vscode/
-?? PLANEJAMENTO.md
-?? instruções/                  ← contém DOCKER.md, litera_backend_api.md, litera_frontend_md.md
-```
-Os arquivos `litera_backend_api.md` e `litera_frontend_md.md` que estavam na raiz foram movidos para `instruções/` (aparecem como `D` no status anterior + a nova pasta untracked).
+**Decisão tomada:** opção (b) — mover docs para dentro de `litera/` e abandonar o repo pai.
 
-#### Decisões a tomar
-- [ ] **Submódulo de verdade ou monorepo?** Hoje `litera/` é um diretório git aninhado, não um submódulo formal. Escolher:
-  - (a) Promover a submódulo (`git submodule add` apontando para `https://github.com/PauloOt/litera.git`) — repo pai versiona o ponteiro.
-  - (b) Mover os `.md` para dentro de `litera/` e abandonar o repo pai.
-- [ ] **`.gitignore` na raiz** — adicionar `.claude/`, `.idea/`, `.vscode/` (IDE/ferramenta local, não devem versionar).
-- [ ] **Commitar `instruções/` + `PLANEJAMENTO.md`** — são documentação real do projeto.
-- [ ] **Atualizar ponteiro do submódulo** — `git add litera` depois que o subrepo tiver tudo mergeado em `main`.
+#### Ações realizadas
+- [x] `instruções/` movida para `litera/instruções/` (4 arquivos: PLANEJAMENTO, DOCKER, litera_backend_api, litera_frontend_md).
+- [x] `.gitignore` do subrepo ajustado: regra global `*.md` mantida, com exceção `!instruções/` + `!instruções/**/*.md` para versionar essa pasta específica.
+- [x] `.git/` da raiz `C:\Users\Paulo\Documents\Litera\` removido — tinha apenas 2 commits 100% locais (nenhuma branch no GitHub), rastreava o ponteiro do subrepo e 2 MDs já movidos.
+- [x] A raiz agora é uma pasta solta contendo o subrepo `litera/` (que continua sendo o git de verdade), além de `.claude/`, `.idea/`, `.vscode/` (totalmente fora de qualquer git).
 
 ---
 
@@ -269,7 +258,7 @@ Semana 3
 1. Bug Planos.jsx (rápido, desbloqueia checkout de assinatura)  ✅ Concluído (commit 91dff24)
 2. Bloco 6.2 — Validação @Valid + GlobalExceptionHandler          ✅ Concluído (commit 59a66bd)
 3. Bloco 6.1 — Histórico de pagamentos + reembolsos               ✅ Concluído (commit 5d2cb47)
-4. Bloco 6.3 — Higiene do repo pai (decisão de arquitetura, fazer com calma)
+4. Bloco 6.3 — Higiene do repo pai                                 ✅ Concluído (commit 1d6f115)
 ```
 
 ---
