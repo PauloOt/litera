@@ -261,6 +261,24 @@ Semana 3
 4. Bloco 6.3 — Higiene do repo pai                                 ✅ Concluído (commit 1d6f115)
 ```
 
+### Smoke test 2026-05-28 (back+front local)
+- `GET /planos` retorna 3 planos com IDs reais (Gratuito=1, Pro=2, Premium=3) — confirma o fix do `Planos.jsx`.
+- Payload inválido em `/auth/cadastro` e `/pagamentos/assinar` retorna 400 (validação `@Valid` ativa).
+- `/auth/cadastro` + `/auth/login` criam usuário e devolvem JWT.
+- `/perfil` agora expõe `statusAssinatura` (campo novo p/ badge inadimplente).
+- `/pagamentos/historico` paginado funciona (`totalItens=0` para usuário novo).
+- `/admin/pagamentos` retorna 403 para usuário comum (RBAC OK).
+- Front Vite serve 200 em `/`.
+
+### Bug ambiental corrigido no smoke
+Existiam 5 registros órfãos em `carteira_pontos` (usuario_id 4–8) sem `usuarios` correspondentes — sobras de usuários deletados ao longo das sessões. Como `CarteiraPontos` usa `@MapsId` (PK compartilhada com `usuarios.id`), o auto_increment de `usuarios` voltou a apontar para um id que `carteira_pontos` já possuía, causando `Duplicate entry` (SQLState 23000) em qualquer novo cadastro. Limpado com `DELETE FROM carteira_pontos WHERE usuario_id NOT IN (SELECT id FROM usuarios)`.
+
+### Docker compose
+`docker compose up` falha por conflito de porta 3306 com o MySQL local. Para validar o stack containerizado: parar o MySQL local antes (`Stop-Service mysql<versão>`) ou trocar o mapeamento em `docker-compose.yml` para `"3307:3306"`.
+
+```
+```
+
 ---
 
 ## ARQUIVOS QUE SERÃO MODIFICADOS
