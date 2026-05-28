@@ -1,19 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Loader } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { usePontos } from '../context/UserContext';
 import api from '../services/api';
 
 export default function PagamentoSucesso() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('confirmando'); // confirmando | ok | erro
+  const { mostrarPontos } = useToast();
+  const { refreshPontos } = usePontos();
+  // Evita duplicar a chamada quando o StrictMode dispara useEffect duas vezes em dev
+  const confirmadoRef = useRef(false);
 
   useEffect(() => {
+    if (confirmadoRef.current) return;
+    confirmadoRef.current = true;
+
     const sessionId = searchParams.get('session_id');
     if (!sessionId) { setStatus('ok'); return; }
 
     api.post(`/pagamentos/confirmar-ingresso?sessionId=${sessionId}`)
-      .then(() => setStatus('ok'))
+      .then((res) => {
+        mostrarPontos(res.data);
+        refreshPontos();
+        setStatus('ok');
+      })
       .catch(() => setStatus('erro'));
   }, []);
 

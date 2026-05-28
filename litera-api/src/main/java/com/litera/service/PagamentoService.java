@@ -1,5 +1,6 @@
 package com.litera.service;
 
+import com.litera.dto.PontosGanhosDTO;
 import com.litera.model.*;
 import com.litera.model.enums.Nivel;
 import com.litera.repository.*;
@@ -29,6 +30,9 @@ public class PagamentoService {
     @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
     private final PlanoRepository planoRepository;
     private final AssinaturaUsuarioRepository assinaturaRepository;
     private final UsuarioRepository usuarioRepository;
@@ -36,6 +40,7 @@ public class PagamentoService {
     private final IngressoRepository ingressoRepository;
     private final ResgatePontosRepository resgatePontosRepository;
     private final PontosService pontosService;
+    private final StripeEventoProcessadoRepository stripeEventoRepository;
 
     /* ─── Assinatura de plano ────────────────────────────────────────── */
 
@@ -54,8 +59,8 @@ public class PagamentoService {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setCustomerEmail(usuario.getEmail())
-                    .setSuccessUrl("http://localhost:5173/assinatura/sucesso")
-                    .setCancelUrl("http://localhost:5173/assinatura/cancelar")
+                    .setSuccessUrl(frontendUrl + "/assinatura/sucesso")
+                    .setCancelUrl(frontendUrl + "/assinatura/cancelar")
                     .putMetadata("tipo", "ASSINATURA")
                     .putMetadata("usuarioId", String.valueOf(usuarioId))
                     .putMetadata("planoId", String.valueOf(planoId))
@@ -158,8 +163,8 @@ public class PagamentoService {
             SessionCreateParams.Builder builder = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.PAYMENT)
                     .setCustomerEmail(usuario.getEmail())
-                    .setSuccessUrl("http://localhost:5173/pagamento/sucesso?session_id={CHECKOUT_SESSION_ID}")
-                    .setCancelUrl("http://localhost:5173/pagamento/cancelado")
+                    .setSuccessUrl(frontendUrl + "/pagamento/sucesso?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl(frontendUrl + "/pagamento/cancelado")
                     .putMetadata("tipo", "INGRESSO")
                     .putMetadata("usuarioId", String.valueOf(usuarioId))
                     .putMetadata("eventoId", String.valueOf(eventoId))
@@ -192,7 +197,13 @@ public class PagamentoService {
     /* ─── Confirmação via session_id (sem webhook) ───────────────────── */
 
     @Transactional
-    public void confirmarIngresso(Long usuarioId, String sessionId) {
+    public PontosGanhosDTO confirmarIngresso(Long usuarioId, String sessionId) {
+        // Idempotência: se já criamos ingresso para essa sessão, não duplica
+        // (cobre React StrictMode, F5 do usuário, e race com o webhook do Stripe)
+        if (!ingressoRepository.findByStripeId(sessionId).isEmpty()) {
+            return null;
+        }
+
         Session session;
         try {
             session = Session.retrieve(sessionId);
@@ -226,9 +237,17 @@ public class PagamentoService {
                 ? new BigDecimal(precoFinalStr)
                 : evento.getPrecoIngresso();
 
+        int totalPontos = 0;
+        PontosGanhosDTO ultimo = null;
         for (int i = 0; i < quantidade; i++) {
-            criarIngresso(usuario, evento, precoFinal, sessionId, i == 0 ? codigoCupom : null);
+            PontosGanhosDTO p = criarIngresso(usuario, evento, precoFinal, sessionId, i == 0 ? codigoCupom : null);
+            if (p != null) {
+                totalPontos += p.getPontosGanhos();
+                ultimo = p;
+            }
         }
+        if (ultimo == null) return null;
+        return new PontosGanhosDTO(totalPontos, "PARTICIPAR_EVENTO", ultimo.getNovoSaldo(), ultimo.getMultiplicador());
     }
 
     /* ─── Webhook ────────────────────────────────────────────────────── */
@@ -242,6 +261,11 @@ public class PagamentoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assinatura do webhook inválida");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Webhook inválido: " + e.getMessage());
+        }
+
+        // Idempotência: descarta reentrega do mesmo evento Stripe
+        if (stripeEventoRepository.existsById(event.getId())) {
+            return;
         }
 
         switch (event.getType()) {
@@ -273,6 +297,45 @@ public class PagamentoService {
                     assinaturaRepository.save(assinatura);
                 });
             }
+        }
+
+        // Registra processamento (idempotência) — só após executar com sucesso
+        StripeEventoProcessado registro = new StripeEventoProcessado();
+        registro.setStripeEventId(event.getId());
+        registro.setTipo(event.getType());
+        registro.setDataProcessamento(LocalDateTime.now());
+        stripeEventoRepository.save(registro);
+    }
+
+    /* ─── Customer Portal (gerenciamento de assinatura) ──────────────── */
+
+    public String criarSessaoPortal(Long usuarioId) {
+        AssinaturaUsuario assinatura = assinaturaRepository
+                .findByUsuarioIdAndStatusAssinatura(usuarioId, "ATIVA")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Nenhuma assinatura ativa encontrada"));
+
+        if (assinatura.getStripeId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Assinatura sem identificador Stripe — não é possível abrir o portal");
+        }
+
+        try {
+            Subscription subscription = Subscription.retrieve(assinatura.getStripeId());
+            String customerId = subscription.getCustomer();
+
+            com.stripe.param.billingportal.SessionCreateParams params =
+                    com.stripe.param.billingportal.SessionCreateParams.builder()
+                            .setCustomer(customerId)
+                            .setReturnUrl(frontendUrl + "/perfil")
+                            .build();
+
+            com.stripe.model.billingportal.Session portal =
+                    com.stripe.model.billingportal.Session.create(params);
+            return portal.getUrl();
+        } catch (StripeException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Erro ao abrir portal Stripe: " + e.getMessage());
         }
     }
 
@@ -326,8 +389,8 @@ public class PagamentoService {
         }
     }
 
-    private void criarIngresso(Usuario usuario, Evento evento,
-                               BigDecimal precoFinal, String stripeSessionId, String codigoCupom) {
+    private PontosGanhosDTO criarIngresso(Usuario usuario, Evento evento,
+                                          BigDecimal precoFinal, String stripeSessionId, String codigoCupom) {
         Ingresso ingresso = new Ingresso();
         ingresso.setUsuario(usuario);
         ingresso.setEvento(evento);
@@ -351,6 +414,6 @@ public class PagamentoService {
                     });
         }
 
-        pontosService.adicionarPontos(usuario.getId(), "PARTICIPAR_EVENTO", 40);
+        return pontosService.adicionarPontos(usuario.getId(), "PARTICIPAR_EVENTO", 40);
     }
 }

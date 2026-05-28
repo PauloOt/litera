@@ -4,6 +4,7 @@ import com.litera.dto.AvaliarLeituraDTO;
 import com.litera.dto.LeituraAtivaDTO;
 import com.litera.dto.LeituraHistoricoDTO;
 import com.litera.dto.NovaLeituraDTO;
+import com.litera.dto.PontosGanhosDTO;
 import com.litera.model.Avaliacao;
 import com.litera.model.Emprestimo;
 import com.litera.model.Livro;
@@ -12,6 +13,7 @@ import com.litera.repository.AvaliacaoRepository;
 import com.litera.repository.EmprestimoRepository;
 import com.litera.repository.LivroRepository;
 import com.litera.repository.UsuarioRepository;
+import com.litera.service.PontosService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +32,7 @@ public class LeituraController {
     private final AvaliacaoRepository avaliacaoRepository;
     private final LivroRepository livroRepository;
     private final UsuarioRepository usuarioRepository;
+    private final PontosService pontosService;
 
     @GetMapping("/leituras")
     public ResponseEntity<List<LeituraAtivaDTO>> getTodas(
@@ -142,7 +145,7 @@ public class LeituraController {
     }
 
     @PutMapping("/leituras/{id}/devolver")
-    public ResponseEntity<Void> devolver(
+    public ResponseEntity<PontosGanhosDTO> devolver(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
 
@@ -151,13 +154,21 @@ public class LeituraController {
                 .filter(e -> e.getUsuario().getId().equals(usuarioId))
                 .orElseThrow(() -> new RuntimeException("Leitura não encontrada"));
 
-        emprestimo.setDataDevolucaoRealizada(LocalDateTime.now());
+        LocalDateTime agora = LocalDateTime.now();
+        emprestimo.setDataDevolucaoRealizada(agora);
         emprestimoRepository.save(emprestimo);
+
+        // Pontos só se devolvido até a data prevista
+        boolean noPrazo = !agora.isAfter(emprestimo.getDataPrevisaoEntrega());
+        if (noPrazo) {
+            PontosGanhosDTO pontos = pontosService.adicionarPontos(usuarioId, "DEVOLUCAO_NO_PRAZO", 20);
+            return ResponseEntity.ok(pontos);
+        }
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/leituras/{id}/avaliar")
-    public ResponseEntity<Void> avaliar(
+    public ResponseEntity<PontosGanhosDTO> avaliar(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id,
             @RequestBody AvaliarLeituraDTO dto) {
@@ -166,6 +177,10 @@ public class LeituraController {
         Emprestimo emprestimo = emprestimoRepository.findById(id)
                 .filter(e -> e.getUsuario().getId().equals(usuario.getId()))
                 .orElseThrow(() -> new RuntimeException("Leitura não encontrada"));
+
+        boolean novaAvaliacao = avaliacaoRepository
+                .findByUsuarioIdAndLivroId(usuario.getId(), emprestimo.getLivro().getId())
+                .isEmpty();
 
         Avaliacao avaliacao = avaliacaoRepository
                 .findByUsuarioIdAndLivroId(usuario.getId(), emprestimo.getLivro().getId())
@@ -177,6 +192,16 @@ public class LeituraController {
         avaliacao.setResenha(dto.getResenha());
         avaliacao.setDataAvaliacao(LocalDateTime.now());
         avaliacaoRepository.save(avaliacao);
+
+        // Pontos só na primeira avaliação do livro pelo usuário (evita farm)
+        if (novaAvaliacao) {
+            String acao = dto.getResenha() != null && !dto.getResenha().isBlank()
+                    ? "ESCREVER_RESENHA"
+                    : "AVALIAR_LIVRO";
+            int base = acao.equals("ESCREVER_RESENHA") ? 25 : 15;
+            PontosGanhosDTO pontos = pontosService.adicionarPontos(usuario.getId(), acao, base);
+            return ResponseEntity.ok(pontos);
+        }
         return ResponseEntity.ok().build();
     }
 

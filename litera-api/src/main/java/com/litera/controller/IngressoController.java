@@ -2,6 +2,7 @@ package com.litera.controller;
 
 import com.litera.dto.EventoDTO;
 import com.litera.dto.IngressoDTO;
+import com.litera.dto.PontosGanhosDTO;
 import com.litera.model.Evento;
 import com.litera.model.Ingresso;
 import com.litera.model.Usuario;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,6 +31,7 @@ public class IngressoController {
     private final PontosService pontosService;
 
     @GetMapping("/meus-ingressos")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<IngressoDTO>> meusIngressos(
             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -52,7 +55,7 @@ public class IngressoController {
     }
 
     @PutMapping("/ingressos/{id}/checkin")
-    public ResponseEntity<Void> checkin(
+    public ResponseEntity<PontosGanhosDTO> checkin(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
 
@@ -77,9 +80,10 @@ public class IngressoController {
         ingressoRepository.save(ingresso);
 
         // Conceder pontos de check-in ao dono do ingresso
-        pontosService.adicionarPontos(ingresso.getUsuario().getId(), "CHECKIN_EVENTO", 30);
+        PontosGanhosDTO pontos = pontosService.adicionarPontos(
+                ingresso.getUsuario().getId(), "CHECKIN_EVENTO", 30);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(pontos);
     }
 
     private EventoDTO toEventoDTO(Evento e) {

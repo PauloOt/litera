@@ -10,6 +10,7 @@ import {
   CalendarPlus,
   Shield,
   Ticket,
+  Crown,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -20,6 +21,7 @@ const baseNavItems = [
   { icon: CalendarDays,    to: '/eventos',     label: 'Eventos' },
   { icon: Ticket,          to: '/meus-ingressos', label: 'Meus Ingressos' },
   { icon: Star,            to: '/pontos',      label: 'Pontos e Desafios' },
+  { icon: Crown,           to: '/planos',      label: 'Planos' },
   { icon: User,            to: '/perfil',      label: 'Perfil' },
 ];
 

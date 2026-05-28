@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -31,6 +32,7 @@ public class EventoController {
     private final UsuarioRepository usuarioRepository;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<EventoDTO>> listar(
             @RequestParam(required = false) String busca) {
 
@@ -45,6 +47,7 @@ public class EventoController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<EventoDTO> detalhe(@PathVariable Long id) {
         return eventoRepository.findById(id)
                 .map(e -> ResponseEntity.ok(toDTO(e)))
@@ -54,6 +57,7 @@ public class EventoController {
     // ---- Organizador ----
 
     @GetMapping("/meus")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<EventoDTO>> meusEventos(
             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -89,6 +93,7 @@ public class EventoController {
     }
 
     @GetMapping("/{id}/participantes")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<ParticipanteDTO>> participantes(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
@@ -172,6 +177,7 @@ public class EventoController {
     // ---- Admin ----
 
     @GetMapping("/pendentes")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<EventoDTO>> pendentes(
             @AuthenticationPrincipal UserDetails userDetails) {
 

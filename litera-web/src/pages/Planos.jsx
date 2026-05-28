@@ -231,8 +231,8 @@ export default function Planos() {
     setAssinando(id);
     try {
       const { data } = await api.post('/pagamentos/assinar', { plano: id });
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      if (data.url) {
+        window.location.href = data.url;
       }
     } catch {
       /* silencia — mostra estado normal novamente */
@@ -240,6 +240,20 @@ export default function Planos() {
       setAssinando(null);
     }
   }
+
+  async function abrirPortal() {
+    setAssinando('portal');
+    try {
+      const { data } = await api.post('/pagamentos/portal');
+      if (data.url) window.location.href = data.url;
+    } catch {
+      /* erro já mostrado via toast global */
+    } finally {
+      setAssinando(null);
+    }
+  }
+
+  const ehPlanoPago = planoAtual === 'Pro' || planoAtual === 'Premium';
 
   return (
     <div className="flex min-h-screen bg-cream">
@@ -259,9 +273,20 @@ export default function Planos() {
               <strong className="text-espresso font-medium">ilimitados para todos</strong>.
             </p>
             {!carregando && (
-              <div className="flex items-center justify-center gap-2 mt-3">
-                <span className="font-body text-sm text-walnut">Seu plano:</span>
-                <BadgePlano plano={planoAtual} />
+              <div className="flex flex-col items-center gap-3 mt-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-body text-sm text-walnut">Seu plano:</span>
+                  <BadgePlano plano={planoAtual} />
+                </div>
+                {ehPlanoPago && (
+                  <button
+                    onClick={abrirPortal}
+                    disabled={assinando === 'portal'}
+                    className="font-body text-sm text-bark border border-bark px-4 py-1.5 rounded-lg hover:bg-bark hover:text-cream transition-all disabled:opacity-60"
+                  >
+                    {assinando === 'portal' ? 'Abrindo portal…' : 'Gerenciar assinatura'}
+                  </button>
+                )}
               </div>
             )}
           </header>

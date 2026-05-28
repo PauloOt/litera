@@ -6,6 +6,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { UserProvider } from './context/UserContext.jsx';
 import { ErroProvider } from './context/ErroContext.jsx';
+import { ToastProvider } from './context/ToastContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <UserProvider>
           <ErroProvider>
-            <App />
+            <ToastProvider>
+              <App />
+            </ToastProvider>
           </ErroProvider>
         </UserProvider>
       </AuthProvider>

@@ -26,7 +26,9 @@ public class Ingresso {
     @Column(name = "valor_final", precision = 10, scale = 2)
     private BigDecimal valorFinal;
 
-    @Column(name = "stripe_id", length = 100)
+    // unique: impede que o mesmo session_id do Stripe gere dois ingressos
+    // (segunda camada de defesa contra StrictMode/F5/race com webhook)
+    @Column(name = "stripe_id", length = 100, unique = true)
     private String stripeId;
 
     @Column(name = "codigo_ingresso", length = 20)

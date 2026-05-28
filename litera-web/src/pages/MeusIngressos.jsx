@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { CalendarDays, MapPin, Ticket } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { CalendarDays, MapPin, Ticket, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import api from '../services/api';
 
@@ -81,20 +81,23 @@ function CardIngresso({ ingresso }) {
 export default function MeusIngressos() {
   const [ingressos, setIngressos] = useState([]);
   const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
 
-  useEffect(() => {
-    async function carregar() {
-      try {
-        const res = await api.get('/meus-ingressos');
-        setIngressos(res.data);
-      } catch {
-        setIngressos([]);
-      } finally {
-        setCarregando(false);
-      }
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErro(null);
+    try {
+      const res = await api.get('/meus-ingressos');
+      setIngressos(res.data);
+    } catch (err) {
+      setIngressos([]);
+      setErro(err?.response?.data?.erro || err?.response?.data?.message || 'Não foi possível carregar seus ingressos. Tente novamente.');
+    } finally {
+      setCarregando(false);
     }
-    carregar();
   }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
 
   return (
     <div className="flex min-h-screen bg-cream">
@@ -105,13 +108,25 @@ export default function MeusIngressos() {
         <div className="mb-6">
           <h1 className="font-display font-bold text-3xl text-espresso">Meus Ingressos</h1>
           <p className="font-body text-sm text-walnut mt-1">
-            {carregando ? 'Carregando…' : `${ingressos.length} ingresso${ingressos.length !== 1 ? 's' : ''}`}
+            {carregando ? 'Carregando…' : erro ? 'Erro ao carregar' : `${ingressos.length} ingresso${ingressos.length !== 1 ? 's' : ''}`}
           </p>
         </div>
 
         {carregando ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-8 h-8 border-2 border-stone border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : erro ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3 text-walnut max-w-md mx-auto text-center">
+            <AlertTriangle size={40} className="text-red-500" />
+            <p className="font-body text-sm">{erro}</p>
+            <button
+              onClick={carregar}
+              className="mt-2 inline-flex items-center gap-2 bg-bark text-cream px-4 py-2 rounded-xl font-body text-sm hover:bg-espresso transition-colors"
+            >
+              <RefreshCw size={14} />
+              Tentar novamente
+            </button>
           </div>
         ) : ingressos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-walnut">

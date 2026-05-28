@@ -1,5 +1,6 @@
 package com.litera.service;
 
+import com.litera.dto.PontosGanhosDTO;
 import com.litera.model.CarteiraPontos;
 import com.litera.model.HistoricoPontos;
 import com.litera.model.Usuario;
@@ -33,7 +34,7 @@ public class PontosService {
     private DesafioService desafioService;
 
     @Transactional
-    public void adicionarPontos(Long usuarioId, String acao, int pontosBase) {
+    public PontosGanhosDTO adicionarPontos(Long usuarioId, String acao, int pontosBase) {
         float multiplicador = assinaturaRepository
                 .findByUsuarioIdAndStatusAssinatura(usuarioId, "ATIVA")
                 .map(a -> a.getPlano().getMultiplicadorPontos() != null
@@ -62,6 +63,8 @@ public class PontosService {
         carteiraPontosRepository.save(carteira);
 
         verificarProgressoDesafios(usuarioId, acao);
+
+        return new PontosGanhosDTO(pontosFinais, acao, novoSaldo, multiplicador);
     }
 
     public CarteiraPontos getSaldo(Long usuarioId) {

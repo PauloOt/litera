@@ -392,7 +392,7 @@ export default function Pontos() {
 
   async function handleResgatar(opcao) {
     try {
-      const res = await api.post('/pontos/resgatar/evento', { pontosResgatados: opcao.pontos });
+      const res = await api.post('/pontos/resgatar/evento', { percentualDesconto: opcao.desconto });
       setCupomGerado(res.data);
       setDados(prev => prev ? { ...prev, saldo: res.data.saldoRestante } : prev);
       setCupons(prev => [{

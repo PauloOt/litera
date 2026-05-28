@@ -5,6 +5,7 @@ import { CardLivro } from '../components/CardLivro';
 import { BadgeStatus } from '../components/BadgeStatus';
 import { Modal } from '../components/Modal';
 import { usePontos } from '../context/UserContext';
+import { useToast } from '../context/ToastContext';
 import api from '../services/api';
 
 /* ─── Utilitários de data ────────────────────────────────────────────── */
@@ -151,6 +152,7 @@ function ModalDevolver({ leitura, onClose, onDevolvido }) {
   const [resenha, setResenha] = useState('');
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const { mostrarPontos } = useToast();
 
   if (!leitura) return null;
 
@@ -160,7 +162,8 @@ function ModalDevolver({ leitura, onClose, onDevolvido }) {
   async function confirmarDevolucao() {
     setSalvando(true);
     try {
-      await api.put(`/leituras/${leitura.id}/devolver`);
+      const res = await api.put(`/leituras/${leitura.id}/devolver`);
+      mostrarPontos(res.data);
       setEtapa('avaliar');
     } catch {
       setErro('Erro ao registrar devolução. Tente novamente.');
@@ -173,7 +176,8 @@ function ModalDevolver({ leitura, onClose, onDevolvido }) {
     if (nota === 0) { setErro('Selecione uma nota.'); return; }
     setSalvando(true);
     try {
-      await api.post(`/leituras/${leitura.id}/avaliar`, { nota, resenha });
+      const res = await api.post(`/leituras/${leitura.id}/avaliar`, { nota, resenha });
+      mostrarPontos(res.data);
       onDevolvido();
     } catch {
       setErro('Erro ao enviar avaliação. Tente novamente.');
