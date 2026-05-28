@@ -12,6 +12,7 @@ Thumbs.db
 # Docs/planning (não rastrear no geral)
 *.md
 # ...exceto documentação versionada do projeto
+!README.md
 !instruções/
 !instruções/**/*.md
 
