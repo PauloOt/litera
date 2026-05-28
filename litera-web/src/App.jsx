@@ -18,6 +18,7 @@ import Admin from './pages/Admin';
 import LivroDetalhe from './pages/LivroDetalhe';
 import PagamentoSucesso from './pages/PagamentoSucesso';
 import PagamentoCancelado from './pages/PagamentoCancelado';
+import HistoricoPagamentos from './pages/HistoricoPagamentos';
 
 const Placeholder = ({ nome }) => (
   <div className="flex items-center justify-center h-screen">
@@ -46,6 +47,7 @@ export default function App() {
       <Route path="/meus-ingressos"    element={<PrivateRoute><MeusIngressos /></PrivateRoute>} />
       <Route path="/pagamento/sucesso"  element={<PrivateRoute><PagamentoSucesso /></PrivateRoute>} />
       <Route path="/pagamento/cancelado" element={<PrivateRoute><PagamentoCancelado /></PrivateRoute>} />
+      <Route path="/pagamentos/historico" element={<PrivateRoute><HistoricoPagamentos /></PrivateRoute>} />
 
       {/* Admin / Organizador */}
       <Route path="/admin" element={

@@ -3,13 +3,19 @@ package com.litera.service;
 import com.litera.dto.PontosGanhosDTO;
 import com.litera.model.*;
 import com.litera.model.enums.Nivel;
+import com.litera.model.enums.StatusPagamento;
+import com.litera.model.enums.TipoPagamento;
 import com.litera.repository.*;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Charge;
 import com.stripe.model.Event;
+import com.stripe.model.Invoice;
+import com.stripe.model.Refund;
 import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
+import com.stripe.param.RefundCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +47,7 @@ public class PagamentoService {
     private final ResgatePontosRepository resgatePontosRepository;
     private final PontosService pontosService;
     private final StripeEventoProcessadoRepository stripeEventoRepository;
+    private final PagamentoRepository pagamentoRepository;
 
     /* ─── Assinatura de plano ────────────────────────────────────────── */
 
@@ -247,6 +254,28 @@ public class PagamentoService {
             }
         }
         if (ultimo == null) return null;
+
+        BigDecimal valorBruto = evento.getPrecoIngresso() != null
+                ? evento.getPrecoIngresso().multiply(BigDecimal.valueOf(quantidade))
+                : BigDecimal.ZERO;
+        BigDecimal valorLiquido = precoFinal.multiply(BigDecimal.valueOf(quantidade));
+        Ingresso primeiroIngresso = ingressoRepository.findByStripeId(sessionId).stream()
+                .findFirst().orElse(null);
+
+        registrarPagamento(
+                usuario,
+                TipoPagamento.INGRESSO,
+                valorBruto,
+                valorLiquido,
+                codigoCupom,
+                sessionId,
+                session.getPaymentIntent(),
+                "Ingresso — " + evento.getTitulo() + (quantidade > 1 ? " (x" + quantidade + ")" : ""),
+                totalPontos,
+                primeiroIngresso,
+                null
+        );
+
         return new PontosGanhosDTO(totalPontos, "PARTICIPAR_EVENTO", ultimo.getNovoSaldo(), ultimo.getMultiplicador());
     }
 
@@ -296,6 +325,36 @@ public class PagamentoService {
                     planoRepository.findByNome("Gratuito").ifPresent(assinatura::setPlano);
                     assinaturaRepository.save(assinatura);
                 });
+            }
+
+            case "customer.subscription.updated" -> {
+                Subscription subscription = (Subscription) event.getDataObjectDeserializer()
+                        .getObject()
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Dados do evento inválidos"));
+                sincronizarAssinaturaStripe(subscription);
+            }
+
+            case "invoice.payment_failed" -> {
+                Invoice invoice = (Invoice) event.getDataObjectDeserializer()
+                        .getObject()
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Dados do evento inválidos"));
+                String subscriptionId = invoice.getSubscription();
+                if (subscriptionId != null) {
+                    assinaturaRepository.findByStripeId(subscriptionId).ifPresent(assinatura -> {
+                        assinatura.setStatusAssinatura("INADIMPLENTE");
+                        assinaturaRepository.save(assinatura);
+                    });
+                }
+            }
+
+            case "charge.refunded" -> {
+                Charge charge = (Charge) event.getDataObjectDeserializer()
+                        .getObject()
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                "Dados do evento inválidos"));
+                processarRefund(charge.getPaymentIntent());
             }
         }
 
@@ -364,6 +423,20 @@ public class PagamentoService {
         assinatura.setDataInicio(LocalDateTime.now());
         assinatura.setDataVencimento(LocalDateTime.now().plusMonths(1));
         assinaturaRepository.save(assinatura);
+
+        registrarPagamento(
+                usuario,
+                TipoPagamento.ASSINATURA,
+                plano.getValorMensal(),
+                plano.getValorMensal(),
+                null,
+                session.getId(),
+                session.getPaymentIntent(),
+                "Assinatura " + plano.getNome(),
+                null,
+                null,
+                assinatura
+        );
     }
 
     private void processarPagamentoIngresso(Session session) {
@@ -384,9 +457,123 @@ public class PagamentoService {
                 ? new BigDecimal(precoFinalStr)
                 : evento.getPrecoIngresso();
 
+        int totalPontos = 0;
+        Ingresso primeiroIngresso = null;
         for (int i = 0; i < quantidade; i++) {
-            criarIngresso(usuario, evento, precoFinal, session.getId(), i == 0 ? codigoCupom : null);
+            PontosGanhosDTO p = criarIngresso(usuario, evento, precoFinal, session.getId(),
+                    i == 0 ? codigoCupom : null);
+            if (p != null) totalPontos += p.getPontosGanhos();
+            if (i == 0) {
+                primeiroIngresso = ingressoRepository.findByStripeId(session.getId()).stream()
+                        .findFirst().orElse(null);
+            }
         }
+
+        BigDecimal valorBruto = evento.getPrecoIngresso() != null
+                ? evento.getPrecoIngresso().multiply(BigDecimal.valueOf(quantidade))
+                : BigDecimal.ZERO;
+        BigDecimal valorLiquido = precoFinal.multiply(BigDecimal.valueOf(quantidade));
+
+        registrarPagamento(
+                usuario,
+                TipoPagamento.INGRESSO,
+                valorBruto,
+                valorLiquido,
+                codigoCupom,
+                session.getId(),
+                session.getPaymentIntent(),
+                "Ingresso — " + evento.getTitulo() + (quantidade > 1 ? " (x" + quantidade + ")" : ""),
+                totalPontos,
+                primeiroIngresso,
+                null
+        );
+    }
+
+    private void processarRefund(String paymentIntentId) {
+        if (paymentIntentId == null) return;
+        pagamentoRepository.findByStripePaymentIntentId(paymentIntentId).ifPresent(pagamento -> {
+            if (pagamento.getStatus() == StatusPagamento.REEMBOLSADO) return;
+            pagamento.setStatus(StatusPagamento.REEMBOLSADO);
+            pagamentoRepository.save(pagamento);
+            if (pagamento.getPontosConcedidos() != null && pagamento.getPontosConcedidos() > 0) {
+                pontosService.reverterPontos(
+                        pagamento.getUsuario().getId(),
+                        pagamento.getTipo().name(),
+                        pagamento.getPontosConcedidos()
+                );
+            }
+        });
+    }
+
+    private void sincronizarAssinaturaStripe(Subscription subscription) {
+        assinaturaRepository.findByStripeId(subscription.getId()).ifPresent(assinatura -> {
+            String status = subscription.getStatus();
+            String statusInterno = switch (status != null ? status : "") {
+                case "active", "trialing" -> "ATIVA";
+                case "past_due", "unpaid" -> "INADIMPLENTE";
+                case "canceled", "incomplete_expired" -> "CANCELADA";
+                default -> assinatura.getStatusAssinatura();
+            };
+            assinatura.setStatusAssinatura(statusInterno);
+            assinaturaRepository.save(assinatura);
+        });
+    }
+
+    /* ─── Reembolso administrativo ───────────────────────────────────── */
+
+    @Transactional
+    public void reembolsarPagamento(Long pagamentoId) {
+        Pagamento pagamento = pagamentoRepository.findById(pagamentoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Pagamento não encontrado"));
+
+        if (pagamento.getStatus() == StatusPagamento.REEMBOLSADO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Pagamento já foi reembolsado");
+        }
+        if (pagamento.getStripePaymentIntentId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Pagamento sem PaymentIntent — não é possível reembolsar via Stripe");
+        }
+
+        try {
+            Refund.create(RefundCreateParams.builder()
+                    .setPaymentIntent(pagamento.getStripePaymentIntentId())
+                    .build());
+        } catch (StripeException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
+                    "Erro ao reembolsar via Stripe: " + e.getMessage());
+        }
+
+        // Atualização imediata; o webhook charge.refunded é idempotente
+        processarRefund(pagamento.getStripePaymentIntentId());
+    }
+
+    private Pagamento registrarPagamento(Usuario usuario, TipoPagamento tipo,
+                                         BigDecimal valorBruto, BigDecimal valorLiquido,
+                                         String cupomCodigo, String stripeSessionId,
+                                         String stripePaymentIntentId, String descricao,
+                                         Integer pontosConcedidos,
+                                         Ingresso ingresso, AssinaturaUsuario assinatura) {
+        if (stripeSessionId != null
+                && pagamentoRepository.findByStripeSessionId(stripeSessionId).isPresent()) {
+            return null;
+        }
+        Pagamento p = new Pagamento();
+        p.setUsuario(usuario);
+        p.setTipo(tipo);
+        p.setValorBruto(valorBruto);
+        p.setValorLiquido(valorLiquido);
+        p.setCupomCodigo(cupomCodigo);
+        p.setStripeSessionId(stripeSessionId);
+        p.setStripePaymentIntentId(stripePaymentIntentId);
+        p.setStatus(StatusPagamento.PAGO);
+        p.setData(LocalDateTime.now());
+        p.setDescricao(descricao);
+        p.setPontosConcedidos(pontosConcedidos);
+        p.setIngresso(ingresso);
+        p.setAssinatura(assinatura);
+        return pagamentoRepository.save(p);
     }
 
     private PontosGanhosDTO criarIngresso(Usuario usuario, Evento evento,

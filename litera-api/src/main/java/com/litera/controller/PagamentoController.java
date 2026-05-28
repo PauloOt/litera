@@ -3,16 +3,22 @@ package com.litera.controller;
 import com.litera.dto.AssinarRequestDTO;
 import com.litera.dto.CheckoutResponseDTO;
 import com.litera.dto.IngressoRequestDTO;
+import com.litera.dto.PagamentoHistoricoDTO;
 import com.litera.dto.PontosGanhosDTO;
+import com.litera.repository.PagamentoRepository;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.PagamentoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/pagamentos")
@@ -21,6 +27,7 @@ public class PagamentoController {
 
     private final PagamentoService pagamentoService;
     private final UsuarioRepository usuarioRepository;
+    private final PagamentoRepository pagamentoRepository;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -66,6 +73,35 @@ public class PagamentoController {
         Long usuarioId = getUsuarioId(userDetails);
         PontosGanhosDTO pontos = pagamentoService.confirmarIngresso(usuarioId, sessionId);
         return ResponseEntity.ok(pontos);
+    }
+
+    @GetMapping("/historico")
+    public ResponseEntity<Map<String, Object>> historico(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "20") int tamanho) {
+
+        Long usuarioId = getUsuarioId(userDetails);
+        int tamanhoSeguro = Math.min(Math.max(tamanho, 1), 100);
+        Page<PagamentoHistoricoDTO> page = pagamentoRepository
+                .findByUsuarioIdOrderByDataDesc(usuarioId, PageRequest.of(Math.max(pagina, 0), tamanhoSeguro))
+                .map(p -> new PagamentoHistoricoDTO(
+                        p.getId(),
+                        p.getTipo().name(),
+                        p.getDescricao(),
+                        p.getValorBruto(),
+                        p.getValorLiquido(),
+                        p.getCupomCodigo(),
+                        p.getStatus().name(),
+                        p.getData()
+                ));
+
+        return ResponseEntity.ok(Map.of(
+                "itens", page.getContent(),
+                "pagina", page.getNumber(),
+                "totalPaginas", page.getTotalPages(),
+                "totalItens", page.getTotalElements()
+        ));
     }
 
     @PostMapping("/webhook")

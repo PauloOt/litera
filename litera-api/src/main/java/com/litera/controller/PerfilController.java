@@ -104,14 +104,23 @@ public class PerfilController {
         dto.setBio(u.getBio());
         dto.setCriadoEm(u.getDataCadastro());
 
-        Optional<AssinaturaUsuario> assinatura = assinaturaRepository
+        Optional<AssinaturaUsuario> assinaturaAtiva = assinaturaRepository
                 .findByUsuarioIdAndStatusAssinatura(u.getId(), "ATIVA");
+        Optional<AssinaturaUsuario> assinaturaInadimplente = assinaturaAtiva.isPresent()
+                ? Optional.empty()
+                : assinaturaRepository.findByUsuarioIdAndStatusAssinatura(u.getId(), "INADIMPLENTE");
+
+        Optional<AssinaturaUsuario> assinatura = assinaturaAtiva.or(() -> assinaturaInadimplente);
         assinatura.ifPresentOrElse(
                 a -> {
                     dto.setPlano(a.getPlano() != null ? a.getPlano().getNome() : "Gratuito");
+                    dto.setStatusAssinatura(a.getStatusAssinatura());
                     dto.setAssinaturaVencimento(a.getDataVencimento());
                 },
-                () -> dto.setPlano("Gratuito")
+                () -> {
+                    dto.setPlano("Gratuito");
+                    dto.setStatusAssinatura("ATIVA");
+                }
         );
 
         PerfilResponseDTO.ConexoesDTO conexoes = new PerfilResponseDTO.ConexoesDTO();

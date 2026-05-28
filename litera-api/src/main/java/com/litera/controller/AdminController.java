@@ -1,6 +1,7 @@
 package com.litera.controller;
 
 import com.litera.dto.EventoDTO;
+import com.litera.dto.PagamentoHistoricoDTO;
 import com.litera.dto.UsuarioAdminDTO;
 import com.litera.model.Evento;
 import com.litera.model.Usuario;
@@ -8,7 +9,9 @@ import com.litera.model.enums.Perfil;
 import com.litera.model.enums.StatusEvento;
 import com.litera.repository.AssinaturaUsuarioRepository;
 import com.litera.repository.EventoRepository;
+import com.litera.repository.PagamentoRepository;
 import com.litera.repository.UsuarioRepository;
+import com.litera.service.PagamentoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,8 @@ public class AdminController {
     private final UsuarioRepository usuarioRepository;
     private final AssinaturaUsuarioRepository assinaturaRepository;
     private final EventoRepository eventoRepository;
+    private final PagamentoRepository pagamentoRepository;
+    private final PagamentoService pagamentoService;
 
     /* ─── Usuários ──────────────────────────────────────────────── */
 
@@ -124,6 +129,41 @@ public class AdminController {
         return ResponseEntity.ok(eventoRepository.findByStatus(StatusEvento.PENDENTE).stream()
                 .map(this::toEventoDTO)
                 .collect(Collectors.toList()));
+    }
+
+    /* ─── Pagamentos ────────────────────────────────────────────── */
+
+    @GetMapping("/pagamentos")
+    public ResponseEntity<List<PagamentoHistoricoDTO>> listarPagamentos(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        requireAdmin(userDetails);
+        return ResponseEntity.ok(pagamentoRepository.findAll().stream()
+                .map(p -> new PagamentoHistoricoDTO(
+                        p.getId(),
+                        p.getTipo().name(),
+                        descricaoComUsuario(p.getDescricao(), p.getUsuario()),
+                        p.getValorBruto(),
+                        p.getValorLiquido(),
+                        p.getCupomCodigo(),
+                        p.getStatus().name(),
+                        p.getData()
+                ))
+                .collect(Collectors.toList()));
+    }
+
+    @PostMapping("/pagamentos/{id}/reembolsar")
+    public ResponseEntity<Void> reembolsar(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        requireAdmin(userDetails);
+        pagamentoService.reembolsarPagamento(id);
+        return ResponseEntity.ok().build();
+    }
+
+    private String descricaoComUsuario(String descricao, Usuario u) {
+        if (u == null) return descricao;
+        String nome = u.getNome();
+        return (descricao != null ? descricao : "") + (nome != null ? " — " + nome : "");
     }
 
     /* ─── Logs (placeholder) ────────────────────────────────────── */

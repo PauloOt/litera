@@ -67,6 +67,33 @@ public class PontosService {
         return new PontosGanhosDTO(pontosFinais, acao, novoSaldo, multiplicador);
     }
 
+    /**
+     * Reverte pontos previamente concedidos (ex.: refund de pagamento).
+     * Registra um histórico negativo e ajusta o saldo da carteira (mínimo 0).
+     */
+    @Transactional
+    public void reverterPontos(Long usuarioId, String acao, int pontosARemover) {
+        if (pontosARemover <= 0) return;
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        HistoricoPontos historico = new HistoricoPontos();
+        historico.setUsuario(usuario);
+        historico.setAcao("REEMBOLSO_" + acao);
+        historico.setPontosQuantidade(-pontosARemover);
+        historico.setMultiplicadorAplicado(1.0f);
+        historico.setDataRegistro(LocalDateTime.now());
+        historicoPontosRepository.save(historico);
+
+        CarteiraPontos carteira = carteiraPontosRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));
+        int novoSaldo = Math.max(0, carteira.getSaldoAtual() - pontosARemover);
+        carteira.setSaldoAtual(novoSaldo);
+        carteira.setNivel(calcularNivel(novoSaldo));
+        carteiraPontosRepository.save(carteira);
+    }
+
     public CarteiraPontos getSaldo(Long usuarioId) {
         return carteiraPontosRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Carteira não encontrada"));

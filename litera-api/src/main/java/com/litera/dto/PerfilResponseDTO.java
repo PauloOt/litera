@@ -13,6 +13,7 @@ public class PerfilResponseDTO {
     private String foto;
     private String bio;
     private String plano;
+    private String statusAssinatura;
     private LocalDateTime criadoEm;
     private LocalDateTime assinaturaVencimento;
     private ConexoesDTO conexoes;

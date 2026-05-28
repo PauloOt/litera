@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Search, CheckCircle, XCircle, Users, CalendarDays, Clock, Shield,
-  BarChart3, LogIn, UserX, UserCheck, Ticket, BookOpen, Eye,
+  BarChart3, LogIn, UserX, UserCheck, Ticket, BookOpen, Eye, Receipt, RotateCcw,
 } from 'lucide-react';
 import { Sidebar } from '../components/Sidebar';
 import { BadgePlano } from '../components/BadgePlano';
@@ -707,6 +707,105 @@ function AbaUsuarios() {
   );
 }
 
+/* ─── Aba: Pagamentos ───────────────────────────────────────────────── */
+function BadgeStatusPagamento({ status }) {
+  const map = {
+    PAGO:        { bg: 'bg-green-100', texto: 'text-green-700', label: 'Pago' },
+    REEMBOLSADO: { bg: 'bg-amber-100', texto: 'text-amber-700', label: 'Reembolsado' },
+    FALHOU:      { bg: 'bg-red-100',   texto: 'text-red-600',   label: 'Falhou' },
+  };
+  const { bg, texto, label } = map[status] ?? { bg: 'bg-sand', texto: 'text-walnut', label: status };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-body font-medium ${bg} ${texto}`}>
+      {label}
+    </span>
+  );
+}
+
+function AbaPagamentos() {
+  const [pagamentos, setPagamentos] = useState([]);
+  const [carregando, setCarreg]     = useState(true);
+  const [acaoEm, setAcaoEm]         = useState(null);
+  const [versao, setVersao]         = useState(0);
+
+  useEffect(() => {
+    let cancelado = false;
+    api.get('/admin/pagamentos')
+      .then(({ data }) => { if (!cancelado) setPagamentos(data ?? []); })
+      .catch(() => { if (!cancelado) setPagamentos([]); })
+      .finally(() => { if (!cancelado) setCarreg(false); });
+    return () => { cancelado = true; };
+  }, [versao]);
+
+  async function handleReembolsar(p) {
+    if (!confirm(`Reembolsar pagamento "${p.descricao}" no valor de R$ ${Number(p.valorLiquido).toFixed(2)}?`)) return;
+    setAcaoEm(p.id);
+    try {
+      await api.post(`/admin/pagamentos/${p.id}/reembolsar`);
+      setVersao(v => v + 1);
+    } catch {
+      // Toast global mostra erro
+    } finally {
+      setAcaoEm(null);
+    }
+  }
+
+  if (carregando) {
+    return <p className="font-body text-sm text-walnut">Carregando pagamentos…</p>;
+  }
+
+  if (pagamentos.length === 0) {
+    return (
+      <div className="bg-sand rounded-2xl p-10 text-center">
+        <Receipt size={32} className="text-walnut mx-auto mb-3 opacity-50" />
+        <p className="font-body text-sm text-walnut">Nenhum pagamento registrado ainda.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-sand rounded-2xl overflow-hidden">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-cream">
+            <th className="text-left p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Data</th>
+            <th className="text-left p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Tipo</th>
+            <th className="text-left p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Descrição</th>
+            <th className="text-right p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Valor</th>
+            <th className="text-center p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Status</th>
+            <th className="text-right p-4 font-body text-xs font-medium text-walnut uppercase tracking-wide">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pagamentos.map((p, i) => (
+            <tr key={p.id} className={i % 2 === 0 ? 'bg-sand' : 'bg-cream/40'}>
+              <td className="p-4 font-body text-sm text-espresso whitespace-nowrap">{formatarDataHora(p.data)}</td>
+              <td className="p-4 font-body text-sm text-espresso">{p.tipo}</td>
+              <td className="p-4 font-body text-sm text-espresso">{p.descricao || '—'}</td>
+              <td className="p-4 font-body text-sm text-espresso text-right whitespace-nowrap">
+                {formatarPreco(p.valorLiquido)}
+              </td>
+              <td className="p-4 text-center"><BadgeStatusPagamento status={p.status} /></td>
+              <td className="p-4 text-right">
+                {p.status === 'PAGO' && (
+                  <button
+                    onClick={() => handleReembolsar(p)}
+                    disabled={acaoEm === p.id}
+                    className="inline-flex items-center gap-1 text-xs font-body font-medium text-amber-700 hover:text-amber-800 disabled:opacity-50"
+                  >
+                    <RotateCcw size={13} />
+                    {acaoEm === p.id ? 'Reembolsando…' : 'Reembolsar'}
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /* ─── Página principal ───────────────────────────────────────────────── */
 export default function Admin() {
   const [aba, setAba] = useState('dashboard');
@@ -723,6 +822,7 @@ export default function Admin() {
     { id: 'pendentes',  label: 'Eventos pendentes',  icone: Clock,        badge: contPendentes },
     { id: 'eventos',    label: 'Todos os eventos',   icone: CalendarDays, badge: null },
     { id: 'usuarios',   label: 'Usuários',           icone: Users,        badge: null },
+    { id: 'pagamentos', label: 'Pagamentos',         icone: Receipt,      badge: null },
     { id: 'logs',       label: 'Logins',             icone: LogIn,        badge: null },
   ];
 
@@ -783,11 +883,12 @@ export default function Admin() {
           </div>
 
           {/* Conteúdo */}
-          {aba === 'dashboard' && <AbaDashboard />}
-          {aba === 'pendentes' && <AbaEventosPendentes />}
-          {aba === 'eventos'   && <AbaTodosEventos />}
-          {aba === 'usuarios'  && <AbaUsuarios />}
-          {aba === 'logs'      && <AbaLogs />}
+          {aba === 'dashboard'  && <AbaDashboard />}
+          {aba === 'pendentes'  && <AbaEventosPendentes />}
+          {aba === 'eventos'    && <AbaTodosEventos />}
+          {aba === 'usuarios'   && <AbaUsuarios />}
+          {aba === 'pagamentos' && <AbaPagamentos />}
+          {aba === 'logs'       && <AbaLogs />}
 
         </div>
       </main>
