@@ -9,12 +9,11 @@
 .DS_Store
 Thumbs.db
 
-# Docs/planning (não rastrear no geral)
+# Docs/planning — pasta inteira fora do versionamento
 *.md
-# ...exceto documentação versionada do projeto
+instruções/
+# ...exceto o README
 !README.md
-!instruções/
-!instruções/**/*.md
 
 # Uploads locais
 litera-api/uploads/

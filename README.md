@@ -18,13 +18,8 @@
 
 ```
 litera/
-├── litera-api/         Backend Spring Boot (porta 8080)
-├── litera-web/         Frontend React + Vite (porta 5173 em dev, 80 em prod)
-├── instruções/         Documentação do projeto
-│   ├── PLANEJAMENTO.md     status atual + decisões + histórico de sessões
-│   ├── DOCKER.md           plano de Docker
-│   ├── litera_backend_api.md
-│   └── litera_frontend_md.md
+├── litera-api/             Backend Spring Boot (porta 8080)
+├── litera-web/             Frontend React + Vite (porta 5173 em dev, 80 em prod)
 ├── docker-compose.yml
 ├── docker-compose.dev.yml  override com hot-reload do frontend
 └── .env                    variáveis de ambiente (NÃO versionado)
@@ -137,13 +132,6 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 - `GET /leituras` · `POST /leituras` · `PUT /leituras/{id}/devolver` · `POST /leituras/{id}/avaliar`
 - `GET /pontos` · `GET /pontos/ranking` · `GET /desafios` · `POST /pontos/resgatar/evento` · `GET /pontos/cupom/{codigo}`
 - `GET /admin/usuarios` · `GET /admin/eventos` · `GET /admin/pagamentos` · `POST /admin/pagamentos/{id}/reembolsar`
-
-## Documentação adicional
-
-- [`instruções/PLANEJAMENTO.md`](instruções/PLANEJAMENTO.md) — status atual, decisões e histórico das sessões
-- [`instruções/DOCKER.md`](instruções/DOCKER.md) — plano de containerização
-- [`instruções/litera_backend_api.md`](instruções/litera_backend_api.md) — especificação dos endpoints
-- [`instruções/litera_frontend_md.md`](instruções/litera_frontend_md.md) — especificação das telas
 
 ## Licença
 
