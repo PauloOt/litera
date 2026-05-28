@@ -211,14 +211,22 @@ function CelulaComparativo({ valor }) {
 /* ─── Página principal ───────────────────────────────────────────────── */
 export default function Planos() {
   const navigate = useNavigate();
-  const [planoAtual, setPlanoAtual] = useState('Gratuito');
-  const [carregando, setCarregando] = useState(true);
-  const [assinando, setAssinando]   = useState(null);
+  const [planoAtual, setPlanoAtual]   = useState('Gratuito');
+  const [carregando, setCarregando]   = useState(true);
+  const [assinando, setAssinando]     = useState(null);
+  const [planosMap, setPlanosMap]     = useState({});
 
   useEffect(() => {
-    api.get('/perfil')
-      .then(({ data }) => setPlanoAtual(data.plano ?? 'Gratuito'))
-      .catch(() => {})
+    Promise.all([
+      api.get('/perfil').catch(() => ({ data: { plano: 'Gratuito' } })),
+      api.get('/planos').catch(() => ({ data: [] })),
+    ])
+      .then(([perfilRes, planosRes]) => {
+        setPlanoAtual(perfilRes.data.plano ?? 'Gratuito');
+        const mapa = {};
+        for (const p of planosRes.data ?? []) mapa[p.nome] = p.id;
+        setPlanosMap(mapa);
+      })
       .finally(() => setCarregando(false));
   }, []);
 
@@ -228,9 +236,14 @@ export default function Planos() {
       navigate('/perfil');
       return;
     }
+    const planoId = planosMap[id];
+    if (!planoId) {
+      console.error(`Plano "${id}" não encontrado no backend`);
+      return;
+    }
     setAssinando(id);
     try {
-      const { data } = await api.post('/pagamentos/assinar', { plano: id });
+      const { data } = await api.post('/pagamentos/assinar', { planoId });
       if (data.url) {
         window.location.href = data.url;
       }
