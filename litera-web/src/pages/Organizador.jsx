@@ -155,7 +155,12 @@ function ModalEvento({ aberto, onFechar, onSalvo, eventoEdit }) {
       setCapaArquivo(null);
       onFechar();
     } catch (err) {
-      const msg = err?.response?.data?.erro || err?.response?.data?.message || err?.message || '';
+      const data = err?.response?.data;
+      const msg = data?.campos && typeof data.campos === 'object'
+        ? Object.entries(data.campos)
+            .map(([campo, erro]) => `${campo}: ${erro}`)
+            .join('; ')
+        : (data?.erro || data?.message || err?.message || '');
       setErro(eventoEdit
         ? `Erro ao editar evento. ${msg}`
         : `Erro ao criar evento. ${msg}`);

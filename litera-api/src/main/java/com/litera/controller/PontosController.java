@@ -10,6 +10,7 @@ import com.litera.repository.UsuarioRepository;
 import com.litera.service.DesafioService;
 import com.litera.service.PontosService;
 import com.litera.service.ResgateService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -107,7 +108,7 @@ public class PontosController {
     @PostMapping("/pontos/resgatar/evento")
     public ResponseEntity<ResgateResponseDTO> resgatar(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ResgateRequestDTO dto) {
+            @Valid @RequestBody ResgateRequestDTO dto) {
 
         Long usuarioId = getUsuarioId(userDetails);
         return ResponseEntity.ok(resgateService.resgatar(usuarioId, dto.getPercentualDesconto()));

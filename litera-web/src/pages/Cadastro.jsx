@@ -203,7 +203,14 @@ export default function Cadastro() {
       }, { _silencioso: true });
       navigate('/login', { state: { success: 'Conta criada! Faça login para continuar.' } });
     } catch (err) {
-      const msg = err.response?.data?.erro ?? err.response?.data ?? '';
+      const data = err.response?.data;
+      // 400 com validação por campo do backend ({ mensagem, campos: { campo: erro } })
+      if (data && typeof data === 'object' && data.campos) {
+        setErrors(prev => ({ ...prev, ...data.campos }));
+        setGlobal(data.mensagem || 'Verifique os campos destacados.');
+        return;
+      }
+      const msg = data?.erro ?? data ?? '';
       const msgStr = typeof msg === 'string' ? msg.toLowerCase() : '';
       if (msgStr.includes('cpf')) {
         setGlobal('Este CPF já está cadastrado');

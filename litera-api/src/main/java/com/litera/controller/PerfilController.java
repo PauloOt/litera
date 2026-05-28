@@ -9,6 +9,7 @@ import com.litera.repository.AssinaturaUsuarioRepository;
 import com.litera.repository.LivroRepository;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.GoogleBooksService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -44,7 +45,7 @@ public class PerfilController {
     @Transactional
     public ResponseEntity<PerfilResponseDTO> updatePerfil(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody PerfilUpdateDTO dto) {
+            @Valid @RequestBody PerfilUpdateDTO dto) {
 
         Usuario usuario = usuarioRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));

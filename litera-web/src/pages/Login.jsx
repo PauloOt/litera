@@ -87,7 +87,11 @@ export default function Login() {
       setAnimating(true);
       setTimeout(() => navigate('/dashboard', { replace: true }), 2500);
     } catch (err) {
-      if (err.response?.status === 401) {
+      const data = err.response?.data;
+      if (data && typeof data === 'object' && data.campos) {
+        setErrors(prev => ({ ...prev, ...data.campos }));
+        setGlobal(data.mensagem || 'Verifique os campos destacados.');
+      } else if (err.response?.status === 401) {
         setGlobal('E-mail ou senha incorretos');
       } else {
         setGlobal('Erro ao conectar com o servidor. Tente novamente.');

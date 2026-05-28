@@ -14,6 +14,7 @@ import com.litera.repository.EmprestimoRepository;
 import com.litera.repository.LivroRepository;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.PontosService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -108,7 +109,7 @@ public class LeituraController {
     @PostMapping("/leituras")
     public ResponseEntity<LeituraAtivaDTO> novaLeitura(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody NovaLeituraDTO dto) {
+            @Valid @RequestBody NovaLeituraDTO dto) {
 
         Usuario usuario = getUsuario(userDetails);
 
@@ -171,7 +172,7 @@ public class LeituraController {
     public ResponseEntity<PontosGanhosDTO> avaliar(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id,
-            @RequestBody AvaliarLeituraDTO dto) {
+            @Valid @RequestBody AvaliarLeituraDTO dto) {
 
         Usuario usuario = getUsuario(userDetails);
         Emprestimo emprestimo = emprestimoRepository.findById(id)

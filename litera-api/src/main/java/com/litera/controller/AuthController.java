@@ -14,6 +14,7 @@ import com.litera.repository.CarteiraPontosRepository;
 import com.litera.repository.PlanoRepository;
 import com.litera.repository.UsuarioRepository;
 import com.litera.security.JwtUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +47,7 @@ public class AuthController {
 
     @PostMapping("/cadastro")
     @Transactional
-    public ResponseEntity<String> cadastro(@RequestBody CadastroRequestDTO dto) {
+    public ResponseEntity<String> cadastro(@Valid @RequestBody CadastroRequestDTO dto) {
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             return ResponseEntity.badRequest().body("Email já cadastrado");
         }
@@ -84,7 +85,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO dto) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getSenha())

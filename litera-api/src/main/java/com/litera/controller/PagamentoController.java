@@ -6,6 +6,7 @@ import com.litera.dto.IngressoRequestDTO;
 import com.litera.dto.PontosGanhosDTO;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.PagamentoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class PagamentoController {
 
     @PostMapping("/assinar")
     public ResponseEntity<CheckoutResponseDTO> assinar(@AuthenticationPrincipal UserDetails userDetails,
-                                                        @RequestBody AssinarRequestDTO dto) {
+                                                        @Valid @RequestBody AssinarRequestDTO dto) {
         Long usuarioId = getUsuarioId(userDetails);
         String url = pagamentoService.criarSessaoAssinatura(usuarioId, dto.getPlanoId());
         return ResponseEntity.ok(new CheckoutResponseDTO(url));
@@ -49,7 +50,7 @@ public class PagamentoController {
     @PostMapping("/ingresso")
     public ResponseEntity<CheckoutResponseDTO> comprarIngresso(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody IngressoRequestDTO dto) {
+            @Valid @RequestBody IngressoRequestDTO dto) {
         Long usuarioId = getUsuarioId(userDetails);
         int qtd = dto.getQuantidade() != null && dto.getQuantidade() > 0 ? dto.getQuantidade() : 1;
         String url = pagamentoService.criarSessaoIngresso(usuarioId, dto.getEventoId(), dto.getCodigoCupom(), qtd);

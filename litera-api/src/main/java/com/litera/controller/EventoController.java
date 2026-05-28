@@ -10,6 +10,7 @@ import com.litera.model.enums.StatusEvento;
 import com.litera.repository.EventoRepository;
 import com.litera.repository.IngressoRepository;
 import com.litera.repository.UsuarioRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -70,7 +71,7 @@ public class EventoController {
     @PostMapping
     public ResponseEntity<EventoDTO> criar(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody NovoEventoDTO dto) {
+            @Valid @RequestBody NovoEventoDTO dto) {
 
         Usuario organizador = getUsuario(userDetails);
 
@@ -124,7 +125,7 @@ public class EventoController {
     public ResponseEntity<EventoDTO> editar(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id,
-            @RequestBody NovoEventoDTO dto) {
+            @Valid @RequestBody NovoEventoDTO dto) {
 
         Usuario autenticado = getUsuario(userDetails);
         Evento evento = eventoRepository.findById(id)
