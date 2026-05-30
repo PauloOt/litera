@@ -9,6 +9,7 @@ import com.litera.model.enums.Perfil;
 import com.litera.model.enums.StatusEvento;
 import com.litera.repository.AssinaturaUsuarioRepository;
 import com.litera.repository.EventoRepository;
+import com.litera.repository.IngressoRepository;
 import com.litera.repository.PagamentoRepository;
 import com.litera.repository.UsuarioRepository;
 import com.litera.service.PagamentoService;
@@ -32,6 +33,7 @@ public class AdminController {
     private final UsuarioRepository usuarioRepository;
     private final AssinaturaUsuarioRepository assinaturaRepository;
     private final EventoRepository eventoRepository;
+    private final IngressoRepository ingressoRepository;
     private final PagamentoRepository pagamentoRepository;
     private final PagamentoService pagamentoService;
 
@@ -196,8 +198,9 @@ public class AdminController {
     }
 
     private EventoDTO toEventoDTO(Evento e) {
-        int vagasRestantes = e.getVagasDisponiveis() != null ? e.getVagasDisponiveis() : 0;
         int vagasTotais = e.getVagasTotais() != null ? e.getVagasTotais() : 0;
+        int ingressosVendidos = (int) ingressoRepository.countByEventoId(e.getId());
+        int vagasRestantes = Math.max(vagasTotais - ingressosVendidos, 0);
         boolean ultimasVagas = vagasTotais > 0 && vagasRestantes > 0
                 && vagasRestantes <= (vagasTotais * 0.1);
         String organizadorNome = null;
@@ -215,7 +218,7 @@ public class AdminController {
                 e.getPrecoIngresso(),
                 vagasRestantes,
                 vagasTotais,
-                vagasTotais - vagasRestantes,
+                ingressosVendidos,
                 e.getImagemCapaUrl(),
                 ultimasVagas,
                 e.getStatus() != null ? e.getStatus().name() : null,

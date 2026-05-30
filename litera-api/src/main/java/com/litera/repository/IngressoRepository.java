@@ -13,6 +13,8 @@ public interface IngressoRepository extends JpaRepository<Ingresso, Long> {
 
     List<Ingresso> findByEventoId(Long eventoId);
 
+    long countByEventoId(Long eventoId);
+
     boolean existsByUsuarioIdAndEventoId(Long usuarioId, Long eventoId);
 
     List<Ingresso> findByStripeId(String stripeId);

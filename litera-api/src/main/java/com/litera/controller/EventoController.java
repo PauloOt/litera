@@ -144,8 +144,16 @@ public class EventoController {
         evento.setLocalizacao(dto.getLocal());
         evento.setDataHora(dto.getDataHora() != null ? dto.getDataHora() : dto.getData());
         evento.setPrecoIngresso(dto.getPreco());
-        evento.setVagasTotais(dto.getVagasTotais());
-        evento.setVagasDisponiveis(dto.getVagasTotais());
+
+        // Ajuste relativo nas vagas: se totais muda, aplicar o mesmo delta em
+        // disponíveis para não jogar fora o tracking de ingressos vendidos.
+        int vagasTotaisAntes = evento.getVagasTotais() != null ? evento.getVagasTotais() : 0;
+        int vagasDispAntes   = evento.getVagasDisponiveis() != null ? evento.getVagasDisponiveis() : 0;
+        int vagasTotaisNovo  = dto.getVagasTotais() != null ? dto.getVagasTotais() : vagasTotaisAntes;
+        int delta = vagasTotaisNovo - vagasTotaisAntes;
+        evento.setVagasTotais(vagasTotaisNovo);
+        evento.setVagasDisponiveis(Math.max(vagasDispAntes + delta, 0));
+
         evento.setImagemCapaUrl(dto.getCapa());
         eventoRepository.save(evento);
 
@@ -217,8 +225,9 @@ public class EventoController {
     // ---- helpers ----
 
     private EventoDTO toDTO(Evento e) {
-        int vagasRestantes = e.getVagasDisponiveis() != null ? e.getVagasDisponiveis() : 0;
         int vagasTotais = e.getVagasTotais() != null ? e.getVagasTotais() : 0;
+        int ingressosVendidos = (int) ingressoRepository.countByEventoId(e.getId());
+        int vagasRestantes = Math.max(vagasTotais - ingressosVendidos, 0);
         boolean ultimasVagas = vagasTotais > 0 && vagasRestantes > 0
                 && vagasRestantes <= (vagasTotais * 0.1);
         String organizadorNome = null;
@@ -234,7 +243,7 @@ public class EventoController {
                 e.getPrecoIngresso(),
                 vagasRestantes,
                 vagasTotais,
-                vagasTotais - vagasRestantes,
+                ingressosVendidos,
                 e.getImagemCapaUrl(),
                 ultimasVagas,
                 e.getStatus() != null ? e.getStatus().name() : null,

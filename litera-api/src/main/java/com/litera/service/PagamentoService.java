@@ -19,6 +19,7 @@ import com.stripe.param.RefundCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -292,8 +293,17 @@ public class PagamentoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Webhook inválido: " + e.getMessage());
         }
 
-        // Idempotência: descarta reentrega do mesmo evento Stripe
-        if (stripeEventoRepository.existsById(event.getId())) {
+        // Idempotência atômica: reserva o evento ANTES de processar.
+        // Se outra thread já reservou (PK duplicado), o INSERT falha e
+        // devolvemos sem reprocessar. Isso fecha a janela de race condition
+        // entre o existsById e o processamento que existia antes.
+        StripeEventoProcessado registro = new StripeEventoProcessado();
+        registro.setStripeEventId(event.getId());
+        registro.setTipo(event.getType());
+        registro.setDataProcessamento(LocalDateTime.now());
+        try {
+            stripeEventoRepository.saveAndFlush(registro);
+        } catch (DataIntegrityViolationException e) {
             return;
         }
 
@@ -322,7 +332,6 @@ public class PagamentoService {
                 assinaturaRepository.findByStripeId(subscription.getId()).ifPresent(assinatura -> {
                     assinatura.setStatusAssinatura("CANCELADA");
                     assinatura.setDataVencimento(LocalDateTime.now());
-                    planoRepository.findByNome("Gratuito").ifPresent(assinatura::setPlano);
                     assinaturaRepository.save(assinatura);
                 });
             }
@@ -357,13 +366,6 @@ public class PagamentoService {
                 processarRefund(charge.getPaymentIntent());
             }
         }
-
-        // Registra processamento (idempotência) — só após executar com sucesso
-        StripeEventoProcessado registro = new StripeEventoProcessado();
-        registro.setStripeEventId(event.getId());
-        registro.setTipo(event.getType());
-        registro.setDataProcessamento(LocalDateTime.now());
-        stripeEventoRepository.save(registro);
     }
 
     /* ─── Customer Portal (gerenciamento de assinatura) ──────────────── */
@@ -412,9 +414,31 @@ public class PagamentoService {
         Plano plano = planoRepository.findById(planoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Plano não encontrado"));
 
-        AssinaturaUsuario assinatura = assinaturaRepository
-                .findByUsuarioIdAndStatusAssinatura(usuario.getId(), "ATIVA")
-                .orElse(new AssinaturaUsuario());
+        // Invariante: no máximo 1 ATIVA por usuário. Se houver herança de estado
+        // inconsistente (race antiga, import manual, migração), mantém a mais
+        // recente e cancela as demais antes de reaproveitar/criar.
+        java.util.List<AssinaturaUsuario> ativas = assinaturaRepository
+                .findAllByUsuarioIdAndStatusAssinatura(usuario.getId(), "ATIVA");
+        AssinaturaUsuario assinatura;
+        if (ativas.isEmpty()) {
+            assinatura = new AssinaturaUsuario();
+        } else {
+            ativas.sort((a, b) -> {
+                LocalDateTime da = a.getDataInicio();
+                LocalDateTime db = b.getDataInicio();
+                if (da == null && db == null) return 0;
+                if (da == null) return 1;
+                if (db == null) return -1;
+                return db.compareTo(da);
+            });
+            assinatura = ativas.get(0);
+            for (int i = 1; i < ativas.size(); i++) {
+                AssinaturaUsuario duplicada = ativas.get(i);
+                duplicada.setStatusAssinatura("CANCELADA");
+                duplicada.setDataVencimento(LocalDateTime.now());
+                assinaturaRepository.save(duplicada);
+            }
+        }
 
         assinatura.setUsuario(usuario);
         assinatura.setPlano(plano);
@@ -440,6 +464,12 @@ public class PagamentoService {
     }
 
     private void processarPagamentoIngresso(Session session) {
+        // Idempotência por sessão: se confirmarIngresso (callback do front)
+        // já criou os ingressos antes do webhook chegar, sair cedo.
+        if (!ingressoRepository.findByStripeId(session.getId()).isEmpty()) {
+            return;
+        }
+
         Long usuarioId = Long.valueOf(session.getMetadata().get("usuarioId"));
         Long eventoId = Long.valueOf(session.getMetadata().get("eventoId"));
         String precoFinalStr = session.getMetadata().get("precoFinal");
