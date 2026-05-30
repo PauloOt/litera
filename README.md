@@ -135,7 +135,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 ## Créditos
 
-Desenvolvimento por Paulo Otavio Santos de Jesus. O assistente Claude (Anthropic) foi utilizado como ferramenta de apoio, principalmente na **integração com APIs externas** (Stripe Checkout/Webhooks/Customer Portal/Refunds, Google Books) e em partes do **frontend** (componentes React, telas, integração com a API). As decisões de arquitetura, modelagem e revisão final ficaram a cargo do autor.
+Desenvolvimento por Paulo Otavio Santos de Jesus, Caio Anderson Mariano Santos da Silva, João Pedro da Silva Carvalho, Erick Novaes Bizzarri Barbosa, João Victor Araujo Silva. O assistente Claude (Anthropic) foi utilizado como ferramenta de apoio, principalmente na **integração com APIs externas** (Stripe Checkout/Webhooks/Customer Portal/Refunds, Google Books) e em partes do **frontend** (componentes React, telas, integração com a API). As decisões de arquitetura, modelagem e revisão final ficaram a cargo do autor.
 
 ## Licença
 
