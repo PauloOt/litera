@@ -89,7 +89,7 @@ function GridLivros({ livros, favoritados, desejos, onToggleFav, onToggleDesejo,
             botao={
               modoRemover ? (
                 <button
-                  onClick={() => onRemover(l)}
+                  onClick={e => { e.stopPropagation(); onRemover(l); }}
                   className="w-full font-body text-xs text-red-600 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   Remover

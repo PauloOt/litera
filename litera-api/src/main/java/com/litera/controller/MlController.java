@@ -109,21 +109,25 @@ public class MlController {
                               Map<String, Object> body) {
         MlItem item = new MlItem();
         item.setUsuario(usuario);
-        item.setMlItemId(mlItemId);
+        item.setMlItemId(trunc(mlItemId, 50));
         item.setTipo(tipo);
-        item.setTitulo(str(body, "titulo"));
-        item.setAutor(str(body, "autor"));
+        item.setTitulo(trunc(str(body, "titulo"), 200));
+        item.setAutor(trunc(str(body, "autor"), 150));
         item.setCapa(str(body, "capa"));
         item.setPreco(body.get("preco") instanceof Number n ? n.doubleValue() : null);
         item.setLink(str(body, "link"));
-        item.setCondicao(str(body, "condicao"));
-        item.setVendedor(str(body, "vendedor"));
+        item.setCondicao(trunc(str(body, "condicao"), 20));
+        item.setVendedor(trunc(str(body, "vendedor"), 100));
         item.setDataAdicionado(LocalDateTime.now());
         return item;
     }
 
     private String str(Map<String, Object> m, String key) {
         return m.get(key) instanceof String s ? s : null;
+    }
+
+    private String trunc(String s, int max) {
+        return s == null || s.length() <= max ? s : s.substring(0, max);
     }
 
     private Usuario getUsuario(UserDetails ud) {
